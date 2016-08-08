@@ -98,10 +98,16 @@ def get_bandwidth(data, duration):
     return data * 8/duration
 
 
-def get_domain_name(url):
+def get_domain_name(url, mpd_file=None):
     """ Module to obtain the domain name from the URL
         From : http://stackoverflow.com/questions/9626535/get-domain-name-from-url
     """
+
+    if mpd_file is not None:
+        print("TESTTEST_" + format(mpd_file))
+        domain = url.replace(mpd_file, '')
+        return domain
+
     parsed_uri = urlparse.urlparse(url)
     domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     return domain
@@ -192,6 +198,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         :param video_segment_duration: Playback duratoin of each segment
         :return:
     """
+
+    print("START_PLAYBACK_SMART:DOMAIN=" + domain)
+
     # Initialize the DASH buffer
     dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
     dash_player.start()
@@ -481,10 +490,10 @@ def main():
     config_dash.LOG.info('Downloading MPD file %s' % MPD)
     # Retrieve the MPD files for the video
     mpd_file = get_mpd(MPD)
-    domain = get_domain_name(MPD)
+    domain = get_domain_name(MPD, mpd_file)
     dp_object = DashPlayback()
     # Reading the MPD file created
-    dp_object, video_segment_duration = read_mpd.read_mpd(mpd_file, dp_object)
+    dp_object, video_segment_duration = read_mpd.read_mpd_v2(mpd_file, dp_object)
     config_dash.LOG.info("The DASH media has %d video representations" % len(dp_object.video))
     if LIST:
         # Print the representations and EXIT
