@@ -112,10 +112,7 @@ def get_domain_name(url, mpd_file=None):
     """
 
     if mpd_file is not None:
-
-        print("TESTTEST_" + format(mpd_file))
         domain = url.replace(mpd_file, '')
-        print(domain, url)
         return domain
 
     parsed_uri = urlparse.urlparse(url)
@@ -217,6 +214,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         :param video_segment_duration: Playback duratoin of each segment
         :return:
     """
+
+    print("START_PLAYBACK_SMART:DOMAIN=" + domain)
+
     # Initialize the DASH buffer
     dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
     PLAYER = dash_player
