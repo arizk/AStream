@@ -32,6 +32,12 @@ import config_dash
 import dash_buffer
 from configure_log_file import configure_log_file, write_json
 import time
+import js2py
+import inspect
+from datetime import datetime
+
+
+import dash_event_logger
 
 try:
     WindowsError
@@ -50,6 +56,8 @@ LIST = False
 PLAYBACK = DEFAULT_PLAYBACK
 DOWNLOAD = False
 SEGMENT_LIMIT = None
+
+PLAYER = None
 
 
 class DashPlayback:
@@ -98,14 +106,21 @@ def get_bandwidth(data, duration):
     return data * 8/duration
 
 
-def get_domain_name(url):
+def get_domain_name(url, mpd_file=None):
     """ Module to obtain the domain name from the URL
         From : http://stackoverflow.com/questions/9626535/get-domain-name-from-url
     """
+
+    if mpd_file is not None:
+
+        print("TESTTEST_" + format(mpd_file))
+        domain = url.replace(mpd_file, '')
+        print(domain, url)
+        return domain
+
     parsed_uri = urlparse.urlparse(url)
     domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
     return domain
-
 
 def id_generator(id_size=6):
     """ Module to create a random string with uppercase 
@@ -116,6 +131,9 @@ def id_generator(id_size=6):
 
 def download_segment(segment_url, dash_folder):
     """ Module to download the segment """
+
+    requestTime = time.time()
+
     try:
         print segment_url
         connection = urllib2.urlopen(segment_url)
@@ -138,6 +156,12 @@ def download_segment(segment_url, dash_folder):
             break
     connection.close()
     segment_file_handle.close()
+
+    responseTime = time.time()
+    deltaTime = responseTime - requestTime
+    #reportBandwidthSample(playbackPosition, delayMs, bytes):
+    dash_event_logger.reportBandwidthSample(PLAYER.playback_timer.time(), deltaTime, segment_size)
+
     return segment_size, segment_filename
 
 
@@ -177,6 +201,7 @@ def print_representations(dp_object):
 
 
 def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None):
+    global PLAYER
     """ Module that downloads the MPD-FIle and download
         all the representations of the Module to download
         the MPEG-DASH media.
@@ -194,6 +219,12 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     """
     # Initialize the DASH buffer
     dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
+    PLAYER = dash_player
+
+
+    dash_event_logger.init(0, PLAYER, 'unknown', MPD , 'AStream', 'standard',)
+    dash_event_logger.setBufferLevelProvider()   
+
     dash_player.start()
     # A folder to save the segments in
     file_identifier = id_generator()
@@ -230,6 +261,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     average_segment_sizes = netflix_rate_map = None
     netflix_state = "INITIAL"
     # Start playback of all the segments
+
+    #dash_event_logger.startupDelay(time.time() - PLAYER.actual_start_time)
+
     for segment_number, segment in enumerate(dp_list, dp_object.video[current_bitrate].start):
         config_dash.LOG.info(" {}: Processing the segment {}".format(playback_type.upper(), segment_number))
         write_json()
@@ -342,6 +376,14 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         config_dash.LOG.info("Downloaded %s. Size = %s in %s seconds" % (
             segment_url, segment_size, str(segment_download_time)))
         if previous_bitrate:
+            if previous_bitrate != current_bitrate:
+                event = {
+                    'height': 0,
+                    'width': 0,
+                    'bitrate': current_bitrate,
+                    'playback_position': dash_player.playback_timer.time(),
+                }
+                dash_event_logger.onAdaptation(event)
             if previous_bitrate < current_bitrate:
                 config_dash.JSON_HANDLE['playback_info']['up_shifts'] += 1
             elif previous_bitrate > current_bitrate:
@@ -469,22 +511,30 @@ def main():
     """ Main Program wrapper """
     # configure the log file
     # Create arguments
+
     parser = ArgumentParser(description='Process Client parameters')
     create_arguments(parser)
     args = parser.parse_args()
     globals().update(vars(args))
     configure_log_file(playback_type=PLAYBACK.lower())
     config_dash.JSON_HANDLE['playback_type'] = PLAYBACK.lower()
+
+    print("after configure log file")
     if not MPD:
         print "ERROR: Please provide the URL to the MPD file. Try Again.."
         return None
+
+    #initialize the dash event logger, after the MPD is parsed
+     
+
+
     config_dash.LOG.info('Downloading MPD file %s' % MPD)
     # Retrieve the MPD files for the video
     mpd_file = get_mpd(MPD)
-    domain = get_domain_name(MPD)
+    domain = get_domain_name(MPD, mpd_file)
     dp_object = DashPlayback()
     # Reading the MPD file created
-    dp_object, video_segment_duration = read_mpd.read_mpd(mpd_file, dp_object)
+    dp_object, video_segment_duration = read_mpd.read_mpd_v2(mpd_file, dp_object)
     config_dash.LOG.info("The DASH media has %d video representations" % len(dp_object.video))
     if LIST:
         # Print the representations and EXIT

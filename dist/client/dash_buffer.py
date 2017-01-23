@@ -7,6 +7,8 @@ import os
 import config_dash
 from stop_watch import StopWatch
 
+import dash_event_logger
+
 # Durations in seconds
 PLAYER_STATES = ['INITIALIZED', 'INITIAL_BUFFERING', 'PLAY',
                  'PAUSE', 'BUFFERING', 'STOP', 'END']
@@ -124,6 +126,7 @@ class DashPlayer:
                             config_dash.LOG.info("Duration of interruption = {}".format(interruption))
                         self.set_state("PLAY")
                         self.log_entry("Buffering-Play")
+                        dash_event_logger.bufferingEnd(interruption)
 
             if self.playback_state == "INITIAL_BUFFERING":
                 if self.buffer.qsize() < config_dash.INITIAL_BUFFERING_COUNT:
@@ -140,6 +143,7 @@ class DashPlayer:
                         self.set_state("END")
                         self.log_entry("Play-End")
                     if self.buffer.qsize() == 0:
+                        dash_event_logger.bufferingStart(time.time(), playback.time())
                         config_dash.LOG.info("Buffer empty after {} seconds of playback".format(
                             self.playback_timer.time()))
                         self.playback_timer.pause()
@@ -194,6 +198,7 @@ class DashPlayer:
         # Acquire Lock on the buffer and add a segment to it
         if not self.actual_start_time:
             self.actual_start_time = time.time()
+
         config_dash.LOG.info("Writing segment {} at time {}".format(segment['segment_number'],
                                                                     time.time() - self.actual_start_time))
         self.buffer_lock.acquire()
