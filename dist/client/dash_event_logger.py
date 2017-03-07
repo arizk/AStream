@@ -48,6 +48,9 @@ class Endpoints():
 
 results = []
 
+def getResults():
+    return results
+
 def sendRequest(endpoint, data):
   global sessionId
   #headers = {'content-type': 'application/json'}
