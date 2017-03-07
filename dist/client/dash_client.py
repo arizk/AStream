@@ -73,6 +73,10 @@ class DashPlayback:
         self.audio = dict()
         self.video = dict()
 
+def set_max_duration(time, segmentsize):
+    global SEGMENT_LIMIT
+    SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
+
 
 def get_mpd(url):
     """ Module to download the MPD from the URL and save it to file"""
