@@ -1,6 +1,6 @@
 __author__ = 'pjuluri'
 
-import config_dash
+from .. import config_dash
 from adaptation import calculate_rate_index
 from empirical_dash import empirical_dash
 
@@ -17,13 +17,13 @@ def basic_dash(segment_number, bitrates,
     :return: next_rate : Bitrate for the next segment
     :return: updated_dwn_time: Updated average downlaod time
     """
-    
+
     if segment_size == 0:
         curr_rate = 0
     else:
         curr_rate = (segment_size*8)/segment_download_time
     with open("vlc_dash-dl-rate.txt", "a") as outf:
-        outf.write(str(segment_number) + '\t' + str(curr_rate) + '\n') # str(download_rate) + '\n')    
+        outf.write(str(segment_number) + '\t' + str(curr_rate) + '\n') # str(download_rate) + '\n')
     config_dash.LOG.info("Current Rate%f"%curr_rate)
     '''
     if average_dwn_time > 0 and segment_number > 0:
@@ -35,12 +35,12 @@ def basic_dash(segment_number, bitrates,
                                                                                                      average_dwn_time))
 
     '''
-    
+
     bitrates = [float(i) for i in bitrates]
     bitrates.sort()
     buffer_sec = buffer_size * 2
     with open("vlc_buffer.txt", "a") as outf:
-        outf.write(str(buffer_sec) + '\n') # str(download_rate) + '\n') 
+        outf.write(str(buffer_sec) + '\n') # str(download_rate) + '\n')
 #    for j in bitrates:
 #        config_dash.LOG.info("Bitrates %f \n",j )
     buffer_size_sec = buffer_size * 2
@@ -50,18 +50,18 @@ def basic_dash(segment_number, bitrates,
     if buffer_size < 4 or curr_rate == 0:
         next_rate = bitrates[0]
         return next_rate
-    elif curr_rate == bitrates[-1]:   
-        next_rate = curr_rate   
+    elif curr_rate == bitrates[-1]:
+        next_rate = curr_rate
     else:
         try:
             curr = bitrates.index(curr_rate)
         except ValueError:
             config_dash.LOG.error("Current Bitrate not in the bitrate lsit. Setting to minimum")
-            curr = calculate_rate_index(bitrates, curr_rate) 
-        next_rate=curr    
+            curr = calculate_rate_index(bitrates, curr_rate)
+        next_rate=curr
     return next_rate
 '''
-def empirical_dash(segment_number, bitrates, segment_download_time, curr_rate, 
+def empirical_dash(segment_number, bitrates, segment_download_time, curr_rate,
                    buffer_size, segment_size, next_segment_sizes, video_segment_duration):
 
     BIN_SIZE = 50
@@ -122,22 +122,22 @@ def empirical_dash(segment_number, bitrates, segment_download_time, curr_rate,
                     return next_rate
 
     if buffer_size < min(5, max_to_min_ratio) or curr_rate == 0:
-        next_rate = bitrates[0]        
+        next_rate = bitrates[0]
         bitrate_history.append(next_rate)
 #        print bitrate_history
         return next_rate
-    elif curr_rate == bitrates[-1]:   
-        next_rate = curr_rate   
+    elif curr_rate == bitrates[-1]:
+        next_rate = curr_rate
     else:
         try:
             curr = bitrates.index(next_spectrum_rate[0])
         except ValueError:
             config_dash.LOG.error("Current Bitrate not in the bitrate list. Setting to minimum")
-            curr = calculate_rate_index(bitrates, curr_rate) 
+            curr = calculate_rate_index(bitrates, curr_rate)
         next_rate=curr
         next_buffer = buffer_size + video_segment_duration - next_dl_times[curr]
     bitrate_history.append(next_rate)
-    
+
     chosen_rates = []
     if len(bitrate_history) >= BIN_SIZE:
         for i in bitrate_history:

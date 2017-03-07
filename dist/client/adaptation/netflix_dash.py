@@ -11,7 +11,7 @@ __author__ = 'pjuluri'
     Proceedings of the 2014 ACM conference on SIGCOMM. ACM, 2014.
 """
 
-import config_dash
+from .. import config_dash
 from collections import OrderedDict
 
 

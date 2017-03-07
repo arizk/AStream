@@ -32,13 +32,15 @@ import timeit
 from string import ascii_letters, digits
 from argparse import ArgumentParser
 from collections import defaultdict
-from adaptation import basic_dash, basic_dash2, weighted_dash, netflix_dash, dash_bola
+from adaptation import basic_dash, basic_dash2, weighted_dash, dash_bola, empirical_dash
 from adaptation.adaptation import WeightedMean
 import config_dash
+import pprint
 import dash_buffer
 import requests
 from configure_log_file import configure_log_file, write_json
 import time
+import numpy as np
 from threading import Thread
 import threading
 #from multiprocessing import Lock, Process, Queue
@@ -71,6 +73,10 @@ SEGMENT_LIMIT = None
 connection = requests.Session()
 bola_buffer_log_file = config_dash.BOLA_BUFFER_LOG_FILENAME
 
+def set_max_duration(time, segmentsize):
+    global SEGMENT_LIMIT
+    SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
+
 class BOLAObject(object):
     """Object to handel audio and video stream """
     def __init__(self):
@@ -90,7 +96,7 @@ class BOLAObject(object):
         self.vid_length=0
         self.lastQuality=0
         self.bufferlen = 0.0
-        
+
 
 class DashPlayback:
     """
@@ -110,7 +116,7 @@ def get_mpd(url):
     global connection
     try:
 
-        
+
         #parse_url = urlparse.urlparse(url)
         '''
         combine_url = str.join((parse_url.scheme, "://",parse_url.netloc))
@@ -120,7 +126,7 @@ def get_mpd(url):
         config_dash.LOG.info("MPD URL %s" %parse_url.path)
         '''
         #connection = HTTPConnectionPool(parse_url.netloc)
-        mpd_conn = connection.get(url) 
+        mpd_conn = connection.get(url)
 
     except urllib2.HTTPError, error:
         config_dash.LOG.error("Unable to download MPD file HTTP Error: %s" % error.code)
@@ -134,12 +140,12 @@ def get_mpd(url):
         message = "Unable to , file_identifierdownload MPD file HTTP Error."
         config_dash.LOG.error(message)
         return None
-    
+
     #mpd_data = mpd_conn.read()
-    
+
     #connection.close()
     mpd_file = url.split('/')[-1]
-    
+
     mpd_file_handle = open(mpd_file, 'wb')
     mpd_file_handle.write(mpd_conn.text)
     mpd_file_handle.close()
@@ -166,7 +172,7 @@ def get_domain_name(url):
 
 
 def id_generator(id_size=6):
-    """ Module to create a random string with uppercase 
+    """ Module to create a random string with uppercase
         and digits.
     """
     return 'TEMP_' + ''.join(random.choice(ascii_letters+digits) for _ in range(id_size))
@@ -180,7 +186,7 @@ def download_segment_bola(domain, dp_list, segment_number, segment_url, dash_fol
     parsed_uri = urlparse.urlparse(segment_url)
     segment_path = '{uri.path}'.format(uri=parsed_uri)
     while segment_path.startswith('/'):
-        segment_path = segment_path[1:]        
+        segment_path = segment_path[1:]
     segment_filename = os.path.join(dash_folder, os.path.basename(segment_path))
     make_sure_path_exists(os.path.dirname(segment_filename))
     #segment_file_handle = open(segment_filename, 'wb')
@@ -189,7 +195,7 @@ def download_segment_bola(domain, dp_list, segment_number, segment_url, dash_fol
     try:
         #print segment_url
         total_data_dl_time = 0
-        
+
         chunk_number = 0
         chunk_start_time = timeit.default_timer()
         with closing(connection.get(segment_url, stream=True)) as seg_conn:
@@ -216,8 +222,8 @@ def download_segment_bola(domain, dp_list, segment_number, segment_url, dash_fol
                         #print segment_w_chunks
                         #print "##################"
                         break
-                    
-                    
+
+
                     timenow = timeit.default_timer()
                     chunk_dl_time = timenow - chunk_start_time
                     total_data_dl_time += chunk_dl_time
@@ -228,7 +234,7 @@ def download_segment_bola(domain, dp_list, segment_number, segment_url, dash_fol
                     bolaObj.bufferlen=((segment_size * 8)/seg_sizes[bolaObj.lastQuality])
                     #config_dash.LOG.info("Start_Abandonment_Logic")
                     start_abandon = timeit.default_timer()
-                    
+
                     abandonReq, bolaObj = dash_bola.bola_abandon(dash_player.buffer.__len__(), current_chunk_dl_rate, last_requests_tput, bolaObj, chunk_start_time, timenow, segment_size, seg_sizes, chunk_dl_time)
                     #config_dash.LOG.info("Abandonment_Exec_Time %f"%(timeit.default_timer()-start_abandon))
                     if abandonReq == True:
@@ -236,17 +242,17 @@ def download_segment_bola(domain, dp_list, segment_number, segment_url, dash_fol
                         segment_file_handle = open(segment_filename,"w")
                         segment_file_handle.close()
                         break
-                       
-                
+
+
         if abandonReq == True:
-                    
-                    seg_conn.close()   
+
+                    seg_conn.close()
                     config_dash.LOG.info("BOLA_ABANDONED SEGMENT %s and BOLA last quality %d"%(segment_url, bolaObj.lastQuality))
                     segment_path = dp_list[segment_number][bolaObj.lastQuality]
                     segment_url = urlparse.urljoin(domain, segment_path)
                     segment_size, segment_filename=download_segment(segment_url, dash_folder)
-                    
-                        
+
+
     except urllib2.HTTPError, error:
         config_dash.LOG.error("Unable to download DASH Segment {} HTTP Error:{} ".format(segment_url, str(error.code)))
         return None
@@ -267,7 +273,7 @@ def download_segment(segment_url, dash_folder):
     parsed_uri = urlparse.urlparse(segment_url)
     segment_path = '{uri.path}'.format(uri=parsed_uri)
     while segment_path.startswith('/'):
-        segment_path = segment_path[1:]        
+        segment_path = segment_path[1:]
     segment_filename = os.path.join(dash_folder, os.path.basename(segment_path))
     make_sure_path_exists(os.path.dirname(segment_filename))
     #segment_file_handle = open(segment_filename, 'wb')
@@ -276,7 +282,7 @@ def download_segment(segment_url, dash_folder):
     try:
         #print segment_url
         total_data_dl_time = 0
-        
+
         chunk_number = 0
         chunk_start_time = timeit.default_timer()
         with closing(connection.get(segment_url, stream=True)) as seg_conn:
@@ -303,7 +309,7 @@ def download_segment(segment_url, dash_folder):
                         #print segment_w_chunks
                         #print "##################"
                         break
-                    
+
                     timenow = timeit.default_timer()
                     chunk_dl_time = timenow - chunk_start_time
                     total_data_dl_time += chunk_dl_time
@@ -311,14 +317,14 @@ def download_segment(segment_url, dash_folder):
                     chunk_start_time = timenow
                     chunk_number += 1
                     chunk_dl_rates.append(current_chunk_dl_rate)
-                
+
     except urllib2.HTTPError, error:
         config_dash.LOG.error("Unable to download DASH Segment {} HTTP Error:{} ".format(segment_url, str(error.code)))
         return None
     #except requests.exceptions.ResponseNotChunked:
      #   return None
-    
-    
+
+
     #connection.close()
     #seg_conn.release_conn()
     seg_conn.close()
@@ -334,7 +340,7 @@ def download_segment_queue(segment_url, dash_folder, q1, q2, q3):
     parsed_uri = urlparse.urlparse(segment_url)
     segment_path = '{uri.path}'.format(uri=parsed_uri)
     while segment_path.startswith('/'):
-        segment_path = segment_path[1:]        
+        segment_path = segment_path[1:]
     segment_filename = os.path.join(dash_folder, os.path.basename(segment_path))
     make_sure_path_exists(os.path.dirname(segment_filename))
     #segment_file_handle = open(segment_filename, 'wb')
@@ -343,7 +349,7 @@ def download_segment_queue(segment_url, dash_folder, q1, q2, q3):
     try:
         #print segment_url
         total_data_dl_time = 0
-        
+
         chunk_number = 0
         chunk_start_time = timeit.default_timer()
         with closing(connection.get(segment_url, stream=True)) as seg_conn:
@@ -383,8 +389,8 @@ def download_segment_queue(segment_url, dash_folder, q1, q2, q3):
         return None
     #except requests.exceptions.ResponseNotChunked:
      #   return None
-    
-    
+
+
     #connection.close()
     #seg_conn.release_conn()
     seg_conn.close()
@@ -429,7 +435,7 @@ def print_representations(dp_object):
         print bandwidth
 
 
-def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, retrans=False):
+def start_playback_smart(dp_object, domain, segmentsize, playback_type=None, download=False, video_segment_duration=None, retrans=False, ):
     """ Module that downloads the MPD-FIle and download
         all the representations of the Module to download
         the MPEG-DASH media.
@@ -447,7 +453,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         :return:
     """
     # Initialize the DASH buffer
-    video_segment_duration = 2
+    video_segment_duration = segmentsize
     bola_init_state = False
     dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
     start_dload_time = timeit.default_timer()
@@ -457,8 +463,12 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     config_dash.LOG.info("The segments are stored in %s" % file_identifier)
     dp_list = defaultdict(defaultdict)
     # Creating a Dictionary of all that has the URLs for each segment and different bitrates
+    pprint.pprint(dp_object)
+    #import IPython
+    #IPython.embed()
     for bitrate in dp_object.video:
         # Getting the URL list for each bitrate
+
         dp_object.video[bitrate] = read_mpd.get_url_list(dp_object.video[bitrate], video_segment_duration,
                                                          dp_object.playback_duration, bitrate)
         if "$Bandwidth$" in dp_object.video[bitrate].initialization:
@@ -475,7 +485,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     segment_files = []
     # For basic adaptation
     global segment_w_chunks
-    init_dl_start_time = timeit.default_timer() 
+    init_dl_start_time = timeit.default_timer()
     segment_w_chunks = []
     previous_segment_times = []
     #BOLA lists
@@ -492,7 +502,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     previous_bitrate = None
     total_downloaded = 0
     bitrate_holder = 0
-    dl_rate_history = [] 
+    dl_rate_history = []
     bolaObj = BOLAObject()
     # Delay in terms of the number of segments
     delay = 0
@@ -508,7 +518,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     # Start playback of all the segments
     #for segment_number, segment in enumerate(dp_list, dp_object.video[current_bitrate].start):
     #for segment_number in dp_list:s
-    
+
     segment_number = 1
     original_segment_number = 1
     while segment_number < len(dp_list):
@@ -599,12 +609,12 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                         else:
                             segment_download_rate = 0
                             last_requests_tput.append(segment_download_rate)
-                        
+
                         #current_bitrate, netflix_rate_map, netflix_state = dash_bola.bola_dash(
                             #bitrates, dash_player, segment_download_rate, current_bitrate, average_segment_sizes,
                             #netflix_rate_map, netflix_state)
                         bolaObj.vid_length=len(dp_list) - 1 + dp_object.video[bitrate].start
-                        
+
                         bolaObj.bitrates=bitrates
                         bolaObj.video_segment_duration=video_segment_duration
                         if bola_init_state == False:
@@ -613,7 +623,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                         bolaObj, delay = dash_bola.bola_dash(dash_player.buffer.__len__(), segment_download_rate, current_bitrate, last_requests_start, last_requests_finish, last_requests_tput,bolaObj)
                         current_bitrate=bolaObj.lastQuality
                         config_dash.LOG.info("SEGMENTURLBitrate1: %d"%current_bitrate)
-                        
+
                         if not os.path.exists(bola_buffer_log_file):
                             header_row = "EpochTime, CurrentBufferSize, Bitrate, DownloadRate, state".split(",")
                             stats = (timeit.default_timer()-start_dload_time, str(dash_player.buffer.__len__()), current_bitrate, (segment_download_rate/8.0), bolaObj.state)
@@ -632,12 +642,12 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                 else:
                     config_dash.LOG.critical("Completed segment playback for BOLA")
                     break
-                
-                if dash_player.buffer.__len__() >= config_dash.BOLA_BUFFER_SIZE: 
+
+                if dash_player.buffer.__len__() >= config_dash.BOLA_BUFFER_SIZE:
                    delay = max((dash_player.buffer.__len__()-config_dash.BOLA_BUFFER_SIZE + 1),0)
                    #delay=1
                    config_dash.LOG.info("BOLA : delay = {} seconds".format(delay))
-                
+
                 # If the buffer is full wait till it gets empty
                 #if dash_player.buffer.__len__() >= config_dash.NETFLIX_BUFFER_SIZE:
                     #delay = (dash_player.buffer.__len__() - config_dash.NETFLIX_BUFFER_SIZE + 1) * segment_duration
@@ -678,7 +688,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                 # current_bitrate = empirical_dash.empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, current_bitrate, dash_player.buffer.qsize(), segment_size, get_segment_sizes(dp_object,segment_number-2), video_segment_duration, dl_rate_history, bitrate_history, segment_w_chunks, DOWNLOAD_CHUNK)
                 current_bitrate, decision_rate = empirical_dash.empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, current_bitrate, dash_player.buffer.__len__(), segment_size, get_segment_sizes(dp_object,segment_number-2), video_segment_duration, dl_rate_history, bitrate_history, segment_w_chunks, DOWNLOAD_CHUNK) #MZ
                 bitrates = [float(i) for i in bitrates]
-                
+
                 if len(segment_w_chunks) > 10:
                     #segment_w_chunks = numpy.delete(segment_w_chunks, (0), axis=0)
                     segment_w_chunks.pop(0)
@@ -690,10 +700,10 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                         current_bitrate = bitrate_history[-1]
                     elif current_bitrate < bitrates[int(bitrates.index(bitrate_history[-1]) - 2)]:
                         print "current_rate! : " + str(current_bitrate)
-#                        current_bitrate = bitrate_history[-1]                  
-                        next_bitrate = int(round(bitrate_history[-1] + current_bitrate) / 2) 
+#                        current_bitrate = bitrate_history[-1]
+                        next_bitrate = int(round(bitrate_history[-1] + current_bitrate) / 2)
                         current_bitrate = min(bitrates, key=lambda x:abs(x - next_bitrate))
-                        #next_q_layer = int(round((bitrates.index(bitrate_history[-1]) + bitrates.index(current_bitrate)) / 2))                        
+                        #next_q_layer = int(round((bitrates.index(bitrate_history[-1]) + bitrates.index(current_bitrate)) / 2))
                         #print "next_q_layer! : " + str(next_q_layer)
                         #current_bitrate = bitrates[next_q_layer]
                         print "changed current_rate! : " + str(current_bitrate)
@@ -764,11 +774,11 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                     #segment_number -= retransmission_delay
                     #retransmission_delay_done = True
                 print "-------------+++++++++++++"
-                print segment
-                print dp_list[segment][current_bitrate]
+                #print segment
+                #print dp_list[segment][current_bitrate]
                 print urlparse.urljoin(domain, segment_path)
                 print "-------------+++++++++++++"
-        
+
         segment_path = dp_list[segment_number][current_bitrate]
         segment_url = urlparse.urljoin(domain, segment_path)
         config_dash.LOG.info("SEGMENTURLBitrate2: %d"%current_bitrate)
@@ -781,7 +791,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         #print file_identifier
         #print "+++++++++++++"
         config_dash.LOG.info("{}: Segment URL = {}".format(playback_type.upper(), segment_url))
-        
+
         if delay:
             delay_start = time.time()
             config_dash.LOG.info("SLEEPING for {}seconds ".format(delay*segment_duration))
@@ -789,7 +799,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                 time.sleep(1)
             delay = 0
             config_dash.LOG.debug("SLEPT for {}seconds ".format(time.time() - delay_start))
-        
+
 
         #try:
         #    config_dash.LOG.info("{}: Started downloading segment {}".format(playback_type.upper(), segment_url))
@@ -804,7 +814,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         #pool.shutdown()
         #pool.wait()
 #        threads = []
-        
+
         if segment_number > 10 and retransmission_delay_switch:
             try:
                 print "________________________________________________________________"
@@ -853,8 +863,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                 config_dash.LOG.error("Unable to save segment %s" % e)
                 return None
         else:
+            start_time = timeit.default_timer()
             try:
-                
+
                 config_dash.LOG.info("{}: Started downloading segment {} with segment number {} and DP_LIST length {}".format(playback_type.upper(), segment_url, segment_number, len(dp_list)))
                 if playback_type.upper()=="BOLA":
                   if segment_number < len(dp_list) - 1:
@@ -864,7 +875,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                     bolaObj.bufferlen=0.0
                     if bolaObj.lastQuality!=0:
                         current_bitrate=bolaObj.lastQuality
-                    
+
                 config_dash.LOG.info("{}: Finished Downloaded segment {}".format(playback_type.upper(), segment_url))
             except IOError, e:
                 config_dash.LOG.error("Unable to save segment %s" % e)
@@ -881,6 +892,8 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
             config_dash.JSON_HANDLE["segment_info"] = list()
         config_dash.JSON_HANDLE["segment_info"].append((segment_name, current_bitrate, segment_size,
                                                         segment_download_time))
+        if segment_size == None:
+            segment_size = 0
         total_downloaded += segment_size
         config_dash.LOG.info("{} : The total downloaded = {}, segment_size = {}, segment_number = {} segment_download_time = {}".format(
             playback_type.upper(),
@@ -907,7 +920,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
             segment_info = {'playback_length': video_segment_duration,
                             'size': segment_size,
                             'bitrate': current_bitrate,
-                            'data': segment_filename,
+                            #'data': segment_filename,
                             'URI': segment_url,
                             'segment_number': segment_number,
                             'segment_layer': bitrates.index(current_bitrate)}
@@ -916,7 +929,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         if retransmission_delay_switch:
             dash_player.write(segment_info_retrans)
             segment_files.append(retrans_segment_filename)
-        segment_files.append(segment_filename)
+        #segment_files.append(segment_filename)
         segment_number += 1
         if retransmission_delay_switch == True:
             segment_number = original_segment_number #+ 1
@@ -952,12 +965,13 @@ def get_segment_sizes(dp_object, segment_number):
     """
     #for bitrate in dp_object.video:
     #    print "hellohello-------------"
-    #    print dp_object.video[bitrate].segment_sizes[segment_number]
+    #    print dp_object.video[bitrate]
     #    print bitrate
     #    print segment_number
     #    print "+++++++++++++++++"
-    #    segment_sizes = dict([(bitrate, dp_object.video[bitrate].segment_sizes[segment_number]))
-    segment_sizes = dict([(bitrate, dp_object.video[bitrate].segment_sizes[segment_number]) for bitrate in dp_object.video])
+        #segment_sizes = dict([(bitrate, dp_object.video[bitrate].segment_sizes[segment_number]))
+    #TODO make this dependent on the segment duration ... we dont know the size of all segments
+    segment_sizes = dict([(bitrate,bitrate*10) for bitrate in dp_object.video])
     #print "hellohello-------------segment_size"
     #print segment_sizes
     #print "+++++++++++++++++"
@@ -975,7 +989,7 @@ def get_average_segment_sizes(dp_object):
     for bitrate in dp_object.video:
         segment_sizes = dp_object.video[bitrate].segment_sizes
         segment_sizes = [float(i) for i in segment_sizes]
-        average_segment_sizes[bitrate] = sum(segment_sizes)/len(segment_sizes)
+        average_segment_sizes[bitrate] = np.ma.average(segment_sizes)
     config_dash.LOG.info("The avearge segment size for is {}".format(average_segment_sizes.items()))
     return average_segment_sizes
 
@@ -997,7 +1011,7 @@ def clean_files(folder_path):
 
 
 def start_playback_all(dp_object, domain):
-    """ Module that downloads the MPD-FIle and download all the representations of 
+    """ Module that downloads the MPD-FIle and download all the representations of
         the Module to download the MPEG-DASH media.
     """
     # audio_done_queue = Queue()
@@ -1048,7 +1062,7 @@ def start_playback_all(dp_object, domain):
 
 def create_arguments(parser):
     """ Adding arguments to the parser """
-    parser.add_argument('-m', '--MPD',                   
+    parser.add_argument('-m', '--MPD',
                         help="Url to the MPD File")
     parser.add_argument('-l', '--LIST', action='store_true',
                         help="List all the representations")
@@ -1113,12 +1127,10 @@ def main():
     elif "bola" in PLAYBACK.lower():
         config_dash.LOG.critical("Started BOLA-DASH Playback")
         start_playback_smart(dp_object, domain, "BOLA", DOWNLOAD, video_segment_duration)
-    
+
     else:
         config_dash.LOG.error("Unknown Playback parameter {}".format(PLAYBACK))
         return None
 
 if __name__ == "__main__":
     sys.exit(main())
-
-

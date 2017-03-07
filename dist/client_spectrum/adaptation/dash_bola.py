@@ -33,7 +33,7 @@
 
 from __future__ import division
 
-import config_dash
+#import config_dash
 from collections import OrderedDict
 import basic_dash
 import timeit
@@ -54,7 +54,7 @@ def setup():
 
 
 def calculateInitialState(segment_download_rate, curr_bitrate, bolaObj):
-    
+
     # TODO: currently based on 12 second buffer target, tweek to utilize a higher buffer target
 
     #Initialize Bitrate
@@ -177,7 +177,7 @@ def getQualityFromBufferLevel(bolaObj, bufferLevel):
 def getLastHttpRequests(metrics, count):
     allHttpRequests = dashMetrics.getHttpRequests(metrics)
     httpRequests = []
-    for i in range(len(allHttpRequests)- 1,-1,--i): 
+    for i in range(len(allHttpRequests)- 1,-1,--i):
         request = allHttpRequests[i]
         if request.type is HTTPRequest.MEDIA_SEGMENT_TYPE and request._tfinish and request.tresponse and request.trace:
             httpRequests.append(request)
@@ -203,12 +203,12 @@ def getLastThroughput(count, last_requests_start, last_requests_finish,last_requ
     for i in range(0,len(lastRequests)):
         # The RTT delay results in a lower throughput. We can avoid this delay in the calculation, but we do not want to.
         downloadSeconds = (last_requests_finish[i] - lastRequests[i])
-            
+
         for j in range (0,len(last_requests_tput)):
             downloadBits+=last_requests_tput[j]
         #downloadBits = reduce((lambda x, y: x+y), last_requests_tput)
         downloadBits/=len(last_requests_tput)
-        
+
         config_dash.LOG.info("%d Last Throughput %f"%((i),downloadBits))
         config_dash.LOG.info("%d Last Download Time %f"%((i),downloadSeconds))
         totalInverse += downloadSeconds / downloadBits
@@ -220,7 +220,7 @@ def getLastThroughput(count, last_requests_start, last_requests_finish,last_requ
 
 def getQualityFromThroughput(bolaObj, throughput):
     # do not factor in bandwidthSafetyFactor here - it is factored at point of call
-    
+
     q = 0
     for i in range(1,len(bolaObj.bitrates)):
         if bolaObj.bitrates[i] > throughput:
@@ -294,12 +294,12 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
     if len(last_requests_start) <= 2:
         # initialization
 
-      
+
         config_dash.LOG.info("BOLA: buffer empty\n")
             #config_dash.LOG.info('BOLA: BolaRule for state=- fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3))
 
         #state,bitrate,utility,Vp,gp,video_segment_duration,bandwidthSafetyFactor,bufferTarget,bufferMax,bolaBufferTarget, bolaBufferMax, safetyGuarantee,lastQuality, virtualBuffer,throughputCount = calculateInitialState(bitrates, segment_download_rate, curr_bitrate, state, video_segment_duration, vid_length)
-    
+
         q = 0
         if bolaObj.state is not config_dash.BOLA_STATE_ONE_BITRATE:
 
@@ -311,21 +311,21 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
             initThroughput = segment_download_rate
             if initThroughput is 0.0:
                 # We don't have information about any download yet - someone else decide quality.
-                
+
                 config_dash.LOG.info(' BolaRule quality unchanged for INITIALIZE')
                 return
-            
+
             q = getQualityFromThroughput(bolaObj, initThroughput * bolaObj.bandwidthSafetyFactor)
-            
+
             bolaObj.lastQuality = q
             config_dash.LOG.info("BOLA:  Initial quality %d"%(bolaObj.lastQuality))
             #switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT)
-        
+
 
         #config_dash.LOG.debug(' BolaRule quality ' + q + ' for INITIALIZE')
         #callback(switchRequest)
         return bolaObj,0.0
-    
+
 
     # metrics.BolaState.length()> 0
     #bolaState = metrics.BolaState[0]._s
@@ -335,7 +335,7 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
         config_dash.LOG.info('BolaRule quality 0 for ONE_BITRATE')
         #callback(switchRequest)
         return
-    
+
 
     #config_dash.LOG.debug(' EXECUTE BolaRule for state=' + state + ' fragmentStart=' + adapter.getIndexHandlerTime(rulesContext.getStreamProcessor()).toFixed(3))
 
@@ -347,14 +347,14 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
     if bufferLevel <= (0.1*config_dash.BOLA_BUFFER_SIZE*bolaObj.video_segment_duration):
         # rebuffering occurred, reset virtual buffer
         bolaObj.virtualBuffer = 0.0
-    
+
 
     if not (bolaObj.safetyGuarantee): # we can use virtualBuffer
     # find out if there was delay because of lack of availability or because bolaBufferTarget > bufferTarget
      timeSinceLastDownload = getDelayFromLastFragmentInSeconds(last_requests_finish)
      if timeSinceLastDownload > 0.0: # TODO: maybe we should set some positive threshold here
         bolaObj.virtualBuffer += timeSinceLastDownload
-    
+
      if bufferLevel + bolaObj.virtualBuffer > bolaObj.bolaBufferMax:
         bolaObj.virtualBuffer = bolaObj.bolaBufferMax - bufferLevel
 
@@ -392,9 +392,9 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
                     bolaObj.virtualBuffer = targetBufferLevel - bufferLevel
                     if bolaObj.virtualBuffer < 0.0: # should be false
                         bolaObj.virtualBuffer = 0.0
-                        
-                    
-                
+
+
+
 
     if bolaObj.state is config_dash.BOLA_STATE_STARTUP or bolaObj.state is config_dash.BOLA_STATE_STARTUP_NO_INC:
         # in startup phase, use some throughput estimation
@@ -423,26 +423,26 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
 
         if bolaObj.state is not config_dash.BOLA_STATE_STEADY:
             # still in startup mode
-            
+
             bolaObj.lastQuality = q
             config_dash.LOG.info('BOLA: BolaRule quality %d > for STARTUP' %bolaObj.lastQuality)
-            
+
             #metricsModel.updateBolaState(mediaType, bolaState)
             #switchRequest = SwitchRequest(context).create(q, SwitchRequest.DEFAULT)
             #callback(switchRequest)
             return bolaObj, 0.0
-        
-    
+
+
 
     # steady state
 
     # we want to avoid oscillations
     # We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-    
+
     delaySeconds = 0.0
-    
+
     if config_dash.BOLAU == False:
-    
+
      if bolaQuality > bolaObj.lastQuality:
         # do not multiply throughput by bandwidthSafetyFactor here: we are not using throughput estimation but capping bitrate to avoid oscillations
         q = getQualityFromThroughput(bolaObj, lastThroughput)
@@ -460,7 +460,7 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
             bolaQuality = q
         config_dash.LOG.info("BOLA: qual_compare tput %f\t quality %d"%(lastThroughput,q))
 
-    
+
 
      if delaySeconds > 0.0:
         # first reduce virtual buffer
@@ -470,8 +470,8 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
         else:
             bolaObj.virtualBuffer -= delaySeconds
             delaySeconds = 0.0
-    
-    
+
+
     '''
     if delaySeconds > 0.0:
         streamProcessor.getScheduleController().setTimeToLoadDelay(1000.0 * delaySeconds)
@@ -486,14 +486,14 @@ def bola_dash(dash_player_buffer, segment_download_rate, curr_bitrate, last_requ
 
 def bola_abandon(dash_player_buffer, current_chunk_dl_rate, last_requests_tput, bolaObj, start_time, current_time, segment_size, seg_sizes, chunk_dl_time):
     abandonReq = False
-    
+
     quality = bolaObj.bitrates.index(bolaObj.lastQuality)
     estTputBSF = bolaObj.bandwidthSafetyFactor * current_chunk_dl_rate
     latencyS = (current_time-start_time)
     bytesTotal = seg_sizes[bolaObj.lastQuality]/8
-    bytesRemaining = seg_sizes[bolaObj.lastQuality]/8 - segment_size 
+    bytesRemaining = seg_sizes[bolaObj.lastQuality]/8 - segment_size
     effectiveBufferLevel = (dash_player_buffer + bolaObj.bufferlen + bolaObj.virtualBuffer)*bolaObj.video_segment_duration
-    
+
     if latencyS < config_dash.POOR_LATENCY_MS:
         latencyS = config_dash.POOR_LATENCY_MS
     estimatedTime = latencyS + 8*segment_size / estTputBSF
@@ -501,14 +501,14 @@ def bola_abandon(dash_player_buffer, current_chunk_dl_rate, last_requests_tput, 
     estimateBytesRemainingAfterLatency = bytesRemaining - latencyS * estTputBSF/8
     if (estimateBytesRemainingAfterLatency < 15000):
             estimateBytesRemainingAfterLatency = 15000
-    
+
     if (chunk_dl_time < config_dash.GRACE_PERIOD_MS or bytesRemaining <= estBytesTot or dash_player_buffer > bolaObj.bufferTarget or estimateBytesRemainingAfterLatency <= estBytesTot or estimatedTime <= bolaObj.video_segment_duration):
         config_dash.LOG.info("BOLA: Stay at current quality")
         return abandonReq, bolaObj
     else:
         config_dash.LOG.info("BOLA: Switch quality")
         effectiveBufferAfterLatency = effectiveBufferLevel - latencyS
-        
+
         maxQualityAllowed = quality
         estimateTimeRemainSeconds = 8*bytesRemaining / estTputBSF
         if estimateTimeRemainSeconds > (dash_player_buffer + bolaObj.bufferlen)*bolaObj.video_segment_duration:
@@ -518,13 +518,13 @@ def bola_abandon(dash_player_buffer, current_chunk_dl_rate, last_requests_tput, 
                 estimateTimeRemainSeconds = latencyS + 8*estBytesTot / estTputBSF;
                 if estimateTimeRemainSeconds <= dash_player_buffer:
                     break
-            
+
                 maxQualityAllowed-=1;
-    
+
         bufferAfterRtt = (dash_player_buffer + bolaObj.bufferlen + bolaObj.virtualBuffer)*bolaObj.video_segment_duration - latencyS
-        
+
         newQuality = quality
-        score = (bolaObj.Vp * (bolaObj.utility[quality] + bolaObj.gp) - effectiveBufferAfterLatency) / estimateBytesRemainingAfterLatency 
+        score = (bolaObj.Vp * (bolaObj.utility[quality] + bolaObj.gp) - effectiveBufferAfterLatency) / estimateBytesRemainingAfterLatency
         for i in range (0, quality):
             estBytesTot = bytesTotal * bolaObj.bitrates[i] / bolaObj.bitrates[quality];
             if (estBytesTot > estimateBytesRemainingAfterLatency):
@@ -533,23 +533,23 @@ def bola_abandon(dash_player_buffer, current_chunk_dl_rate, last_requests_tput, 
             if (s > score):
                 newQuality = i;
                 score = s;
-         
+
         #compare with maximum allowed quality that shouldn't lead to rebuffering
         if (newQuality > maxQualityAllowed):
             newQuality = maxQualityAllowed
-        
+
 
         if (newQuality == quality):
             abandonReq = False
             return abandonReq, bolaObj
-        
+
 
         #Abandon, but to which quality? Abandoning should not happen often, and it's OK to be more conservative when it does.
-        
 
-        
+
+
         while (newQuality > 0 and bolaObj.bitrates[newQuality] > estTputBSF):
-            newQuality-=1 
+            newQuality-=1
         bolaObj.lastQuality = bolaObj.bitrates[newQuality]
         abandonReq = True
     return abandonReq, bolaObj
@@ -578,4 +578,3 @@ factory.BOLA_STATE_STEADY         = BOLA_STATE_STEADY
 factory.BOLA_DEBUG = BOLA_DEBUG; # TODO: remove
 export default factory
 '''
-
