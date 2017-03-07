@@ -46,15 +46,17 @@ class Endpoints():
   BW_ESTIMATE = 'bw_estimation'
   BW_SAMPLE = 'bw_sample'
 
+results = []
 
 def sendRequest(endpoint, data):
   global sessionId
-  headers = {'content-type': 'application/json'}
-  response = requests.post(API_URL + endpoint, data=data, headers=headers)
-
-  if endpoint == Endpoints.SESSION:
-    sessionId = response.json()['id']
-    print('session_id is : ' , sessionId)
+  #headers = {'content-type': 'application/json'}
+  #response = requests.post(API_URL + endpoint, data=data, headers=headers)
+  results.append({endpoint: data})
+  print {endpoint: data}
+  #if endpoint == Endpoints.SESSION:
+    #sessionId = response.json()['id']
+    #print('session_id is : ' , sessionId)
 
 def getUTCTimestamp():
   return str(datetime.now())
@@ -149,7 +151,7 @@ def onAdaptation(event):
   CurrentState.bitrate = event['bitrate']
 
   sendRequest(Endpoints.ADAPTATION, data)
- 
+
 
 def onPlay():
   CurrentState.videoState = VideoState.play

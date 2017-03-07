@@ -20,6 +20,7 @@ import random
 import os
 import sys
 import errno
+import numpy as np
 import timeit
 import httplib
 from string import ascii_letters, digits
@@ -89,7 +90,7 @@ def get_mpd(url):
         message = "Unable to , file_identifierdownload MPD file HTTP Error."
         config_dash.LOG.error(message)
         return None
-    
+
     mpd_data = connection.read()
     connection.close()
     mpd_file = url.split('/')[-1]
@@ -120,7 +121,7 @@ def get_domain_name(url, mpd_file=None):
     return domain
 
 def id_generator(id_size=6):
-    """ Module to create a random string with uppercase 
+    """ Module to create a random string with uppercase
         and digits.
     """
     return 'TEMP_' + ''.join(random.choice(ascii_letters+digits) for _ in range(id_size))
@@ -140,7 +141,7 @@ def download_segment(segment_url, dash_folder):
     parsed_uri = urlparse.urlparse(segment_url)
     segment_path = '{uri.path}'.format(uri=parsed_uri)
     while segment_path.startswith('/'):
-        segment_path = segment_path[1:]        
+        segment_path = segment_path[1:]
     segment_filename = os.path.join(dash_folder, os.path.basename(segment_path))
     make_sure_path_exists(os.path.dirname(segment_filename))
     segment_file_handle = open(segment_filename, 'wb')
@@ -223,7 +224,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
 
 
     dash_event_logger.init(0, PLAYER, 'unknown', MPD , 'AStream', 'standard',)
-    dash_event_logger.setBufferLevelProvider()   
+    dash_event_logger.setBufferLevelProvider()
 
     dash_player.start()
     # A folder to save the segments in
@@ -419,7 +420,7 @@ def get_average_segment_sizes(dp_object):
     for bitrate in dp_object.video:
         segment_sizes = dp_object.video[bitrate].segment_sizes
         segment_sizes = [float(i) for i in segment_sizes]
-        average_segment_sizes[bitrate] = sum(segment_sizes)/len(segment_sizes)
+        average_segment_sizes[bitrate] = np.ma.average(segment_sizes)
     config_dash.LOG.info("The avearge segment size for is {}".format(average_segment_sizes.items()))
     return average_segment_sizes
 
@@ -441,7 +442,7 @@ def clean_files(folder_path):
 
 
 def start_playback_all(dp_object, domain):
-    """ Module that downloads the MPD-FIle and download all the representations of 
+    """ Module that downloads the MPD-FIle and download all the representations of
         the Module to download the MPEG-DASH media.
     """
     # audio_done_queue = Queue()
@@ -492,7 +493,7 @@ def start_playback_all(dp_object, domain):
 
 def create_arguments(parser):
     """ Adding arguments to the parser """
-    parser.add_argument('-m', '--MPD',                   
+    parser.add_argument('-m', '--MPD',
                         help="Url to the MPD File")
     parser.add_argument('-l', '--LIST', action='store_true',
                         help="List all the representations")
@@ -525,7 +526,7 @@ def main():
         return None
 
     #initialize the dash event logger, after the MPD is parsed
-     
+
 
 
     config_dash.LOG.info('Downloading MPD file %s' % MPD)
