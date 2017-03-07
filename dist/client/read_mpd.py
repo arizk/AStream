@@ -7,6 +7,8 @@ from __future__ import division
 import re
 import config_dash
 from operator import mod
+import re
+from IPython import embed
 
 # Dictionary to convert size to bits
 SIZE_DICT = {'bits':   1,
@@ -73,7 +75,7 @@ class MediaObject(object):
 
 
 class DashPlayback:
-    """ 
+    """
     Audio[bandwidth] : {duration, url_list}
     Video[bandwidth] : {duration, url_list}
     """
@@ -112,7 +114,7 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
 
 
 def read_mpd_v2(mpd_file, dashplayback):
-    """ function to read mpds which are defined similar to 
+    """ function to read mpds which are defined similar to
         http://www-itec.uni-klu.ac.at/ftp/datasets/DASHDataset2014/OfForestAndMen/2sec/OfForestAndMen_2s_simple_2014_05_09.mpd"""
 
     try:
@@ -126,7 +128,7 @@ def read_mpd_v2(mpd_file, dashplayback):
     root = tree.getroot()
 
     currentTag = get_tag_name(root.tag).upper()
-    
+
     #MPD ATTRIBUTES
     if 'MPD' in currentTag:
         if MEDIA_PRESENTATION_DURATION in root.attrib:
@@ -134,7 +136,7 @@ def read_mpd_v2(mpd_file, dashplayback):
             config_dash.JSON_HANDLE["video_metadata"]['playback_duration'] = dashplayback.playback_duration
         if MIN_BUFFER_TIME in root.attrib:
             dashplayback.min_buffer_time = get_playback_time(root.attrib[MIN_BUFFER_TIME])
-    
+
     child_period = None
     for child_element in root:
         child = get_tag_name(child_element.tag).upper()
@@ -146,7 +148,7 @@ def read_mpd_v2(mpd_file, dashplayback):
 
     for adaption_set in child_period:
         for child in adaption_set:
-            
+
             tag = get_tag_name(child.tag).upper()
             if tag == 'SEGMENTTEMPLATE':
                 timescale = child.attrib['timescale']
@@ -154,7 +156,9 @@ def read_mpd_v2(mpd_file, dashplayback):
                 startNumber = child.attrib['startNumber']
                 duration = child.attrib['duration']
                 initialization = child.attrib['initialization']
-            elif tag == 'REPRESENTATION':
+            #skip audio and subtitles
+            elif tag == 'REPRESENTATION' and child.attrib['id'] not in 'subtitles' and child.attrib['mimeType'] == 'video/mp4':
+                #embed()
                 _id = child.attrib['id']
                 mimeType = child.attrib['mimeType']
                 codecs = child.attrib['codecs']
@@ -172,7 +176,7 @@ def read_mpd_v2(mpd_file, dashplayback):
                 config_dash.JSON_HANDLE["video_metadata"]['available_bitrates'].append(bandwidth)
                 media_object[bandwidth] = MediaObject()
                 media_object[bandwidth].segment_sizes = []
-                
+
                 #SegmentTemplate Attributes
                 #I Assume that the segment template was the first to be filled
                 media_object[bandwidth].base_url = media
@@ -180,7 +184,9 @@ def read_mpd_v2(mpd_file, dashplayback):
                 media_object[bandwidth].timescale = float(timescale)
                 media_object[bandwidth].initialization = initialization
                 video_segment_duration = (float(duration)/float(timescale))
+
     print("DONE WITH MY NEW READ_MPD")
+
     return dashplayback, int(video_segment_duration)
 def read_mpd(mpd_file, dashplayback):
     """ Module to read the MPD file"""

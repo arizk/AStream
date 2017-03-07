@@ -51,7 +51,7 @@ def sendRequest(endpoint, data):
   global sessionId
   headers = {'content-type': 'application/json'}
   response = requests.post(API_URL + endpoint, data=data, headers=headers)
-  
+
   if endpoint == Endpoints.SESSION:
     sessionId = response.json()['id']
     print('session_id is : ' , sessionId)
@@ -61,7 +61,7 @@ def getUTCTimestamp():
 
 def init(experimentId, dashPlayer, videoName, videoUrl, playerType, adaptionAlgorithm):
   global PLAYER
-  
+
   data = json.dumps({
         'timestamp': getUTCTimestamp(),
         'client_id': 'no_client_id',
@@ -133,7 +133,7 @@ def onAdaptation(event):
     'last_bitrate': CurrentState.bitrate,
     'last_height': CurrentState.height,
     'last_width': CurrentState.width,
-    'experiment': sessionId,    
+    'experiment': sessionId,
     'height':event['height'],
     'width': event['width'],
     'bitrate':event['bitrate'],
@@ -147,8 +147,9 @@ def onAdaptation(event):
   CurrentState.width = event['width']
   CurrentState.height = event['height']
   CurrentState.bitrate = event['bitrate']
-  
+
   sendRequest(Endpoints.ADAPTATION, data)
+ 
 
 def onPlay():
   CurrentState.videoState = VideoState.play
@@ -163,7 +164,7 @@ def onPlaying():
   CurrentState.videoState = VideoSTate.playing
 
 def startupDelay(delayMs):
-  
+
   data = json.dumps({
     'timestamp': getUTCTimestamp(),
     'eventtype': 'initialStalling',
@@ -200,17 +201,17 @@ def setInterval(func, sec):
   def inner_function():
     setInterval(func, sec)
     func()
-  
+
   thread = threading.Timer(sec, inner_function)
   thread.setDaemon(True)
   thread.start()
 
   return thread
 
-""" 
+"""
 Update: had to remove the "starting" of the old thread because the recursive nature of the interval does not work with python
 This function manually starts every interval from within the interval. So as long the stoping condition is not met,
-the interval is running. 
+the interval is running.
 def runInterval():
   intervalBufferLevelThread.start()
   """
