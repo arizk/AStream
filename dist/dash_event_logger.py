@@ -46,7 +46,14 @@ class Endpoints():
   BW_ESTIMATE = 'bw_estimation'
   BW_SAMPLE = 'bw_sample'
 
-results = []
+results = {
+    'stalling':[],
+    'adaptation':[],
+    'experiments':[],
+    'bufferlevel':[],
+    'bw_estimation':[],
+    'bw_sample':[]
+}
 
 def getResults():
     return results
@@ -55,19 +62,19 @@ def sendRequest(endpoint, data):
   global sessionId
   #headers = {'content-type': 'application/json'}
   #response = requests.post(API_URL + endpoint, data=data, headers=headers)
-  results.append({endpoint: data})
+  results.get(endpoint).append(data)
   print {endpoint: data}
   #if endpoint == Endpoints.SESSION:
     #sessionId = response.json()['id']
     #print('session_id is : ' , sessionId)
 
 def getUTCTimestamp():
-  return str(datetime.now())
+  return datetime.now().strftime("%a, %d %b %Y %H:%M:%S")
 
 def init(experimentId, dashPlayer, videoName, videoUrl, playerType, adaptionAlgorithm):
   global PLAYER
 
-  data = json.dumps({
+  data = {
         'timestamp': getUTCTimestamp(),
         'client_id': 'no_client_id',
         'experiment_id': experimentId,
@@ -76,40 +83,40 @@ def init(experimentId, dashPlayer, videoName, videoUrl, playerType, adaptionAlgo
         'browser': 'python_2.7',
         'player_type': playerType,
         'adaption_algorithm': adaptionAlgorithm
-  })
+  }
 
   PLAYER = dashPlayer
 
   sendRequest(Endpoints.SESSION, data)
 
 def onBufferLevelUpdate(event):
-  data = json.dumps({
+  data = {
     'timestamp': getUTCTimestamp(),
     'playback_position': event.pos,
     'buffer_level': event.buffer_level,
     'experiment': sessionId
-    })
+    }
 
 def onStalling(duration):
-  data = json.dumps({
+  data = {
     'timestamp': getUTCTimestamp(),
     'eventtype': 'stalling',
     'playback_position': CurrentState.streamPos,
     'experiment': sessionId,
     'duration': duration * 1000
-    })
+    }
 
   sendRequest(Endpoints.STALLING, data)
 
-def reportBandwidthSample(playbackPosition, delayMs, bytes):
-  print('report bandwidth sampke', playbackPosition, delayMs, bytes)
-  data = json.dumps({
+def reportBandwidthSample(playbackPosition, delayMs, bytes_):
+  print('report bandwidth sampke', playbackPosition, delayMs, bytes_)
+  data = {
     'timestamp': getUTCTimestamp(),
     'playback_position': playbackPosition,
     'delay_ms': delayMs,
-    'bytes': bytes,
+    'bytes': bytes_,
     'experiment': sessionId
-    })
+    }
   print('report bandwidth sampke', playbackPosition, delayMs, bytes)
   sendRequest(Endpoints.BW_SAMPLE, data)
 
@@ -133,7 +140,7 @@ def onAdaptation(event):
   time_in_representation = current_playback_time - CurrentState.last_representation_change
   CurrentState.last_representation_change = current_playback_time
 
-  data = json.dumps({
+  data = {
     'timestamp': getUTCTimestamp(),
     'last_bitrate': CurrentState.bitrate,
     'last_height': CurrentState.height,
@@ -144,7 +151,7 @@ def onAdaptation(event):
     'bitrate':event['bitrate'],
     'playback_position': event['playback_position'],
     'time_in_representation': time_in_representation
-    })
+    }
 
   CurrentState.last_width =  CurrentState.width
   CurrentState.last_height =  CurrentState.height
@@ -170,13 +177,13 @@ def onPlaying():
 
 def startupDelay(delayMs):
 
-  data = json.dumps({
+  data = {
     'timestamp': getUTCTimestamp(),
     'eventtype': 'initialStalling',
     'playback_position': 0,
     'experiment': sessionId,
     'duration': delayMs
-    })
+    }
 
   sendRequest(Endpoints.STALLING, data)
 
@@ -189,12 +196,12 @@ def setBufferLevelProvider():
   def reportBufferLevel():
     global PLAYER
     print(PLAYER)
-    data = json.dumps({
+    data = {
       'timestamp': getUTCTimestamp(),
       'playback_position': PLAYER.playback_timer.time(),
       'buffer_level':  PLAYER.buffer_length,
       'experiment': sessionId
-      })
+      }
 
     sendRequest(Endpoints.BUFFER_LEVEL, data)
 
