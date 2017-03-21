@@ -36,6 +36,7 @@ import time
 import js2py
 import inspect
 from datetime import datetime
+import numpy as np
 
 
 import dash_event_logger
@@ -77,6 +78,9 @@ def set_max_duration(time, segmentsize):
     global SEGMENT_LIMIT
     SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
 
+def set_max_duration(time, segmentsize):
+    global SEGMENT_LIMIT
+    SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
 
 def get_mpd(url):
     """ Module to download the MPD from the URL and save it to file"""

@@ -1,6 +1,6 @@
 __author__ = 'pjuluri'
 
-import config_dash
+from .. import config_dash
 
 
 def basic_dash2(segment_number, bitrates, average_dwn_time,
@@ -58,5 +58,5 @@ def basic_dash2(segment_number, bitrates, average_dwn_time,
                 break
     config_dash.LOG.info("Basic Adaptation: Download Rate = {}, next_bitrate = {}".format(download_rate, next_rate))
     with open("chosen-rate.txt", "a") as outf:
-        outf.write(str(segment_number) + '\t' + str(next_rate) + '\t' + str(download_rate) + '\n')    
+        outf.write(str(segment_number) + '\t' + str(next_rate) + '\t' + str(download_rate) + '\n')
     return next_rate, updated_dwn_time

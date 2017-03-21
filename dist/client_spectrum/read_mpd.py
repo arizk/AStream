@@ -6,7 +6,7 @@
 from __future__ import division
 import re
 import config_dash
-
+PLAYBACK = ""
 # Dictionary to convert size to bits
 SIZE_DICT = {'bits':   1,
              'Kbits':  1000,
@@ -93,13 +93,13 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
     segment_count = media.start
     # Get the Base URL string
     base_url = media.base_url
-    print base_url
+    #print base_url
     while True:
         if "$Bandwidth$" in base_url:
             base_url = base_url.replace("$Bandwidth$", str(bitrate))
         if "$Number$" in base_url:
             res = base_url.replace('$Number$', str(segment_count))
-        print res
+        #print res
         media.url_list.append(res)
         segment_count += 1
         if total_playback > playback_duration:

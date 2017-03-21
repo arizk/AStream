@@ -1,10 +1,11 @@
-import config_dash
+from .. import config_dash
 from adaptation import calculate_rate_index
 from spectrum_calc import spectrum_calc
 import numpy as np
 from sortedcontainers import SortedDict
 import math
 import operator
+
 
 class SortedDisplayDict(dict):
    def __str__(self):
@@ -14,7 +15,7 @@ def percentile(x):
     pc = float(1)/(len(x)-1)
     return ["%.2f"%(n*pc) for n, i in enumerate(x)]
 
-def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, curr_rate, 
+def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, curr_rate,
                    buffer_size, segment_size, next_segment_sizes, video_segment_duration, dl_rate_history, bitrate_history, segment_w_chunks, DOWNLOAD_CHUNK):
     segment_number = segment_number - 1
     BIN_SIZE = 50
@@ -29,12 +30,12 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
 #    config_dash.LOG.info("EMPIRICAL: Buffer Size %f"%buffer_size)
 
     with open('empirical-dl-rate.txt', 'a') as dlrate:
-        dlrate.write(str(segment_number) + '\t' + str(curr_rate) + '\n') 
+        dlrate.write(str(segment_number) + '\t' + str(curr_rate) + '\n')
 
     max_to_min_size_ratio = next_segment_sizes[bitrates[-1]] / next_segment_sizes[bitrates[0]]
     q_layer = 2
 
-    if segment_number <= 10: 
+    if segment_number <= 10:
         #if bitrates[-1] / curr_rate <= video_segment_duration:
         if segment_number <= min(INITIAL_TRAIN+1, max_to_min_size_ratio):
             next_rate = bitrates[0]
@@ -42,7 +43,7 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
             return next_rate
         else:
             #q_layer = (segment_number - 5) * 2 ** (segment_number - 5)
-            q_layer = q_layer ** (segment_number - 5) 
+            q_layer = q_layer ** (segment_number - 5)
             if q_layer > 0 and q_layer < len(bitrates):
                 for i in range(q_layer, q_layer/2, -1):
                     if average_segment_sizes[bitrates[q_layer]] / curr_rate <= (video_segment_duration * 2):
@@ -91,7 +92,7 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
                 index_of_chunk = index_of_chunk - 1
             elif index_of_chunk == 0:
                 next_dl_rate = curr_rate
-                print "index_of_chunk = 0 average" 
+                print "index_of_chunk = 0 average"
                 break
             else:
                 index_of_chunk = index_of_chunk - 1
@@ -133,14 +134,14 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
     #    inti = int(i)
     #    next_spectrum_rates.index(inti)
     #    if average_segment_sizes[inti]/next_dl_rate > 2 * video_segment_duration:
-    #        next_spectrum_rates.pop(int(next_spectrum_rates.index(inti)))    
+    #        next_spectrum_rates.pop(int(next_spectrum_rates.index(inti)))
     if not next_spectrum_rates:
         next_rate = bitrate_history[-1]
         return next_rate
     #ANOTHER WAY: sorted_by_spectrum = SortedDisplayDict(br_spectrum)
     next_rate = next_spectrum_rates[0]
-    
-    
+
+
     if next_rate <= bitrate_history[-1]: #BIN_SIZE:
         for n in range(len(bitrates)):
             size = next_segment_sizes[bitrates[n]]
@@ -171,7 +172,7 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
                 index_of_chunk = index_of_chunk - 1
             elif index_of_chunk == 0:
                 next_dl_rate = curr_rate
-                print "index_of_chunk = 0 percentile" 
+                print "index_of_chunk = 0 percentile"
                 break
             else:
                 index_of_chunk = index_of_chunk - 1
@@ -211,5 +212,5 @@ def empirical_dash(average_segment_sizes, segment_number, bitrates, segment_down
         next_rate = next_spectrum_rates[0]
         #bitrate_history.pop()
         print next_rate
-        return next_rate        
+        return next_rate
     return next_rate

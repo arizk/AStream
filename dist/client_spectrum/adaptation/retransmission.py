@@ -1,5 +1,5 @@
 #import dash_client
-import config_dash
+from .. import config_dash
 
 def get_segment_sizes(dp_object, segment_number):
     segment_sizes = dict([(bitrate, dp_object.video[bitrate].segment_sizes[segment_number]) for bitrate in dp_object.video])
@@ -64,7 +64,7 @@ def retransmission(dp_object, current_bitrate, segment_number, buffer_dict, bitr
                     elif j - i < shortest_gap:
                         with open('empirical-debug.txt', 'a') as emp4:
                             emp4.write('j - i < shortest_gap' + '\n')
-                        shortest_gap = j - i                        
+                        shortest_gap = j - i
                         if get_segment_sizes(dp_object,segment_index)[bitrates[q_layers_in_buffer[i+1]]] / segment_download_rate < (video_segment_duration * 2):
                             if q_layers_in_buffer[j+1] - q_layers_in_buffer[j] > q_layers_in_buffer[i+1] - q_layers_in_buffer[i]:
                                 q_layer_retransmit = q_layers_in_buffer[i]

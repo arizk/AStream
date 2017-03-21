@@ -39,7 +39,7 @@ import dash_buffer
 import requests
 from configure_log_file import configure_log_file, write_json
 import time
-
+import numpy as np
 try:
     WindowsError
 except NameError:
@@ -58,12 +58,16 @@ RETRANS_THRESHOLD_LOWER = 0.4
 # Not sure if this is the correct way ....
 MPD = None
 LIST = False
+global PLAYBACK
 PLAYBACK = DEFAULT_PLAYBACK
 DOWNLOAD = False
 SEGMENT_LIMIT = None
 connection = requests.Session()
 download_log_file = config_dash.DOWNLOAD_LOG_FILENAME
 
+def set_max_duration(time, segmentsize):
+    global SEGMENT_LIMIT
+    SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
 
 class DashPlayback:
     """

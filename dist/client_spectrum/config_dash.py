@@ -25,7 +25,7 @@ import os
 # create logger
 LOG_NAME = 'AStream_log'
 LOG_LEVEL = None
-
+PLAYBACK = ""
 # Set '-' to print to screen
 LOG_FOLDER = "ASTREAM_LOGS/"
 if not os.path.exists(LOG_FOLDER):
