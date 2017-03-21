@@ -98,8 +98,9 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
         if "$Bandwidth$" in base_url:
             base_url = base_url.replace("$Bandwidth$", str(bitrate))
         if "$Number$" in base_url:
-            base_url = base_url.replace('$Number$', str(segment_count))
-        media.url_list.append(base_url)
+            res = base_url.replace('$Number$', str(segment_count))
+        print res
+        media.url_list.append(res)
         segment_count += 1
         if total_playback > playback_duration:
             break
