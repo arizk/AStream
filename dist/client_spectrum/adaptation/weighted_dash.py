@@ -1,6 +1,6 @@
 __author__ = 'pjuluri'
 
-from .. import config_dash
+import config_dash
 
 
 def weighted_dash(bitrates, dash_player, weighted_dwn_rate, curr_bitrate, segment_number, segment_size, segment_download_time, next_segment_sizes):
@@ -17,7 +17,7 @@ def weighted_dash(bitrates, dash_player, weighted_dwn_rate, curr_bitrate, segmen
     else:
         curr_rate = (segment_size*8)/segment_download_time
     with open("sara_dash-dl-rate.txt", "a") as outf:
-        outf.write(str(segment_number) + '\t' + str(curr_rate) + '\n') # str(download_rate) + '\n')
+        outf.write(str(segment_number) + '\t' + str(curr_rate) + '\n') # str(download_rate) + '\n') 
 
     bitrates = [int(i) for i in bitrates]
     bitrates.sort()

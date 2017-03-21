@@ -22,21 +22,21 @@ def retransmission(dp_object, current_bitrate, segment_number, buffer_dict, bitr
         q_layers_in_buffer.append(buffer_dict[i]['segment_layer'])
         bitrates_in_buffer.append(buffer_dict[i]['bitrate'])
         segment_numbers.append(buffer_dict[i]['segment_number'])
-    with open('empirical-debug.txt', 'a') as emp:
-        emp.write('first segment number: ' + str(segment_numbers[0]) + '\n')
+#    with open('empirical-debug.txt', 'a') as emp:
+#        emp.write('first segment number: ' + str(segment_numbers[0]) + '\n')
     print segment_numbers
     print q_layers_in_buffer
     #Temporary quality degradation:
     for i in range(len(q_layers_in_buffer)-MAX_GAP_WIDTH):
         if q_layers_in_buffer[i] > q_layers_in_buffer[i+1]:
             segment_index_tmp = segment_number - len(q_layers_in_buffer) + i + 1
-            #with open('empirical-debug.txt', 'a') as emp2:
-            #    emp2.write("########FIND QUALITY DEGRADATION############" + '\t' + str(segment_index_tmp) + '\n')
+            with open('empirical-debug.txt', 'a') as emp2:
+                emp2.write("########FIND QUALITY DEGRADATION############" + '\t' + str(segment_index_tmp) + '\n')
             for j in range(i+1, i+MAX_GAP_WIDTH):
                 if q_layers_in_buffer[j] < q_layers_in_buffer[j+1]:
                     if j - i == shortest_gap:
-                        #with open('empirical-debug.txt', 'a') as emp3:
-                        #    emp3.write('j - i == shortest_gap' + '\n')
+                        with open('empirical-debug.txt', 'a') as emp3:
+                            emp3.write('j - i == shortest_gap' + '\n')
                         if largest_jump != 0 and ((q_layers_in_buffer[j - 1] - q_layers_in_buffer[j]) > largest_jump):
                             if get_segment_sizes(dp_object,segment_index)[bitrates[q_layers_in_buffer[i+1]]] / segment_download_rate < (video_segment_duration * 2):
                                 if q_layers_in_buffer[j+1] - q_layers_in_buffer[j] > q_layers_in_buffer[i+1] - q_layers_in_buffer[i]:
@@ -62,8 +62,8 @@ def retransmission(dp_object, current_bitrate, segment_number, buffer_dict, bitr
                             segment_index = segment_index_tmp
 
                     elif j - i < shortest_gap:
-                        #with open('empirical-debug.txt', 'a') as emp4:
-                        #    emp4.write('j - i < shortest_gap' + '\n')
+                        with open('empirical-debug.txt', 'a') as emp4:
+                            emp4.write('j - i < shortest_gap' + '\n')
                         shortest_gap = j - i                        
                         if get_segment_sizes(dp_object,segment_index)[bitrates[q_layers_in_buffer[i+1]]] / segment_download_rate < (video_segment_duration * 2):
                             if q_layers_in_buffer[j+1] - q_layers_in_buffer[j] > q_layers_in_buffer[i+1] - q_layers_in_buffer[i]:
@@ -73,10 +73,8 @@ def retransmission(dp_object, current_bitrate, segment_number, buffer_dict, bitr
                             q_layer_retransmit = q_layers_in_buffer[i]
                             segment_index = segment_index_tmp
                             #segment_index = segment_number - len(q_layers_in_buffer) + i + 1
-                            #with open('empirical-dash-chosen-rate.txt', 'a') as emp:
-                            #    emp.write('segment_index: ' + str(segment_index) + '\n')
-                            if segment_index >= segment_numbers[0]:
-                                return bitrates[q_layer_retransmit], segment_index
+                            with open('empirical-dash-chosen-rate.txt', 'a') as emp:
+                                emp.write('segment_index: ' + str(segment_index) + '\n')
                             RETRANSMIT = True
                         else:
                             with open('empirical-debug.txt', 'a') as emp:
@@ -101,6 +99,8 @@ def retransmission(dp_object, current_bitrate, segment_number, buffer_dict, bitr
                     q_layer_retransmit = q_layers_in_buffer[i]
                     RETRANSMIT = True
     if RETRANSMIT == True and segment_index >= segment_numbers[0]:
+        print "---------------Retransmit initialized----------------"
+        print "NEW Bitrate:" + str(bitrates[q_layer_retransmit])
         return bitrates[q_layer_retransmit], segment_index
     else:
         return current_bitrate, segment_number
