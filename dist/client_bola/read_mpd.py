@@ -72,7 +72,7 @@ class MediaObject(object):
 
 
 class DashPlayback:
-    """ 
+    """
     Audio[bandwidth] : {duration, url_list}
     Video[bandwidth] : {duration, url_list}
     """
@@ -93,15 +93,14 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
     segment_count = media.start
     # Get the Base URL string
     base_url = media.base_url
-    if "$Bandwidth$" in base_url:
-        base_url = base_url.replace("$Bandwidth$", str(bitrate))
-    if "$Number" in base_url:
-        base_url = base_url.split('$')
-        base_url[1] = base_url[1].replace('$', '')
-        base_url[1] = base_url[1].replace('Number', '')
-        base_url = ''.join(base_url)
+    #print base_url
     while True:
-        media.url_list.append(base_url % segment_count)
+        if "$Bandwidth$" in base_url:
+            base_url = base_url.replace("$Bandwidth$", str(bitrate))
+        if "$Number$" in base_url:
+            res = base_url.replace('$Number$', str(segment_count))
+        media.url_list.append(res)
+        #print res
         segment_count += 1
         if total_playback > playback_duration:
             break
@@ -174,4 +173,5 @@ def read_mpd(mpd_file, dashplayback):
     #print "-----------"
     #print media_object[bandwidth].segment_sizes
     #print "-----------"
+    #video_segment_duration = 10
     return dashplayback, int(video_segment_duration)

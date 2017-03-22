@@ -83,7 +83,7 @@ def get_mpd(url):
     global connection
     try:
 
-        
+
         #parse_url = urlparse.urlparse(url)
         '''
         combine_url = str.join((parse_url.scheme, "://",parse_url.netloc))
@@ -93,7 +93,7 @@ def get_mpd(url):
         config_dash.LOG.info("MPD URL %s" %parse_url.path)
         '''
         #connection = HTTPConnectionPool(parse_url.netloc)
-        mpd_conn = connection.get(url) 
+        mpd_conn = connection.get(url)
 
     except urllib2.HTTPError, error:
         config_dash.LOG.error("Unable to download MPD file HTTP Error: %s" % error.code)
@@ -107,12 +107,12 @@ def get_mpd(url):
         message = "Unable to , file_identifierdownload MPD file HTTP Error."
         config_dash.LOG.error(message)
         return None
-    
+
     #mpd_data = mpd_conn.read()
-    
+
     #connection.close()
     mpd_file = url.split('/')[-1]
-    
+
     mpd_file_handle = open(mpd_file, 'wb')
     mpd_file_handle.write(mpd_conn.text)
     mpd_file_handle.close()
@@ -133,13 +133,14 @@ def get_domain_name(url):
     """ Module to obtain the domain name from the URL
         From : http://stackoverflow.com/questions/9626535/get-domain-name-from-url
     """
-    parsed_uri = urlparse.urlparse(url)
-    domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+    #parsed_uri = urlparse.urlparse(url)
+    domain = urlparse.urlsplit(url).geturl()
+
     return domain
 
 
 def id_generator(id_size=6):
-    """ Module to create a random string with uppercase 
+    """ Module to create a random string with uppercase
         and digits.
     """
     return 'TEMP_' + ''.join(random.choice(ascii_letters+digits) for _ in range(id_size))
@@ -153,7 +154,7 @@ def download_segment(segment_url, dash_folder):
     parsed_uri = urlparse.urlparse(segment_url)
     segment_path = '{uri.path}'.format(uri=parsed_uri)
     while segment_path.startswith('/'):
-        segment_path = segment_path[1:]        
+        segment_path = segment_path[1:]
     segment_filename = os.path.join(dash_folder, os.path.basename(segment_path))
     make_sure_path_exists(os.path.dirname(segment_filename))
     #segment_file_handle = open(segment_filename, 'wb')
@@ -162,7 +163,7 @@ def download_segment(segment_url, dash_folder):
     try:
         #print segment_url
         total_data_dl_time = 0
-        
+
         chunk_number = 0
         chunk_start_time = timeit.default_timer()
         with closing(connection.get(segment_url, stream=True)) as seg_conn:
@@ -202,8 +203,8 @@ def download_segment(segment_url, dash_folder):
         return None
     #except requests.exceptions.ResponseNotChunked:
      #   return None
-    
-    
+
+
     #connection.close()
     #seg_conn.release_conn()
     seg_conn.close()
@@ -291,7 +292,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     segment_files = []
     # For basic adaptation
     global segment_w_chunks
-    init_dl_start_time = timeit.default_timer() 
+    init_dl_start_time = timeit.default_timer()
     segment_w_chunks = []
     previous_segment_times = []
     recent_download_sizes = []
@@ -302,7 +303,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     previous_bitrate = None
     total_downloaded = 0
     bitrate_holder = 0
-    dl_rate_history = [] 
+    dl_rate_history = []
     # Delay in terms of the number of segments
     delay = 0
     segment_duration = 0
@@ -320,7 +321,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     original_segment_number = 1
     while segment_number < len(dp_list):
         if retransmission_delay_switch == True:
-            #segment_number = original_segment_number 
+            #segment_number = original_segment_number
             retransmission_delay_switch = False
         segment = segment_number
         #print len(dp_list)
@@ -475,7 +476,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                 # current_bitrate = empirical_dash.empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, current_bitrate, dash_player.buffer.qsize(), segment_size, get_segment_sizes(dp_object,segment_number-2), video_segment_duration, dl_rate_history, bitrate_history, segment_w_chunks, DOWNLOAD_CHUNK)
                 current_bitrate = empirical_dash.empirical_dash(average_segment_sizes, segment_number, bitrates, segment_download_time, current_bitrate, dash_player.buffer.__len__(), segment_size, get_segment_sizes(dp_object,segment_number-2), video_segment_duration, dl_rate_history, bitrate_history, segment_w_chunks, DOWNLOAD_CHUNK) #MZ
                 bitrates = [float(i) for i in bitrates]
-                
+
                 if len(segment_w_chunks) > 10:
                     #segment_w_chunks = numpy.delete(segment_w_chunks, (0), axis=0)
                     segment_w_chunks.pop(0)
@@ -495,10 +496,10 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                                 current_bitrate = bitrate_history[-1]
                             elif current_bitrate < bitrates[int(bitrates.index(bitrate_history[-1]) - 2)]:
                                 #print "current_rate! : " + str(current_bitrate)
-                                #current_bitrate = bitrate_history[-1]                  
-                                next_bitrate = int(round(bitrate_history[-1] + current_bitrate) / 2) 
+                                #current_bitrate = bitrate_history[-1]
+                                next_bitrate = int(round(bitrate_history[-1] + current_bitrate) / 2)
                                 current_bitrate = min(bitrates, key=lambda x:abs(x - next_bitrate))
-                                #next_q_layer = int(round((bitrates.index(bitrate_history[-1]) + bitrates.index(current_bitrate)) / 2))                        
+                                #next_q_layer = int(round((bitrates.index(bitrate_history[-1]) + bitrates.index(current_bitrate)) / 2))
                                 #print "next_q_layer! : " + str(next_q_layer)
                                 #current_bitrate = bitrates[next_q_layer]
                                 #print "changed current_rate! : " + str(current_bitrate)
@@ -604,7 +605,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                             result_writer = csv.writer(log_file_handle, delimiter=",")
                             if header_row:
                                 result_writer.writerow(header_row)
-                            result_writer.writerow(str_stats) 
+                            result_writer.writerow(str_stats)
         segment_path = dp_list[segment][current_bitrate]
         segment_url = urlparse.urljoin(domain, segment_path)
         #print "+++++++++++++"
@@ -734,7 +735,7 @@ def clean_files(folder_path):
 
 
 def start_playback_all(dp_object, domain):
-    """ Module that downloads the MPD-FIle and download all the representations of 
+    """ Module that downloads the MPD-FIle and download all the representations of
         the Module to download the MPEG-DASH media.
     """
     # audio_done_queue = Queue()
@@ -785,7 +786,7 @@ def start_playback_all(dp_object, domain):
 
 def create_arguments(parser):
     """ Adding arguments to the parser """
-    parser.add_argument('-m', '--MPD',                   
+    parser.add_argument('-m', '--MPD',
                         help="Url to the MPD File")
     parser.add_argument('-l', '--LIST', action='store_true',
                         help="List all the representations")
@@ -847,7 +848,7 @@ def main():
     elif "empirical" in PLAYBACK.lower():
         config_dash.LOG.critical("Started Hello-DASH Playback")
         start_playback_smart(dp_object, domain, "EMPIRICAL", DOWNLOAD, video_segment_duration, RETRANS)
-        
+
     else:
         config_dash.LOG.error("Unknown Playback parameter {}".format(PLAYBACK))
         return None

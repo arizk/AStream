@@ -2,7 +2,6 @@ __author__ = 'pjuluri'
 
 from .. import config_dash
 
-
 def weighted_dash(bitrates, dash_player, weighted_dwn_rate, curr_bitrate, segment_number, segment_size, segment_download_time, next_segment_sizes):
     """
     Module to predict the next_bitrate using the weighted_dash algorithm

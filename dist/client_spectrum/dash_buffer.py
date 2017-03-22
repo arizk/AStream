@@ -232,10 +232,11 @@ class DashPlayer:
             for i in reversed(range(len(self.buffer))):
                 if self.buffer[i].get('segment_number') == segment['segment_number']:
                     self.buffer.pop(i)
-            segment_index = segment_numbers.index(segment['segment_number'])
-            print "+++++++++++++"
-            print self.buffer
-            self.buffer.insert(segment_index, segment)
+            if segment['segment_number'] in segment_numbers:
+                segment_index = segment_numbers.index(segment['segment_number'])
+                print "+++++++++++++"
+                print self.buffer
+                self.buffer.insert(segment_index, segment)
             #segment_numbers_new = [d['segment_number'] for d in self.buffer if 'segment_number' in d]
             print "^$^#%@#"
             print self.buffer
@@ -261,8 +262,8 @@ class DashPlayer:
             self.buffer_length_lock.release()
 
         self.log_entry(action="Writing", bitrate=segment['bitrate'])
-        print "-----------buffer:-----------"
-        print self.buffer
+        #print "-----------buffer:-----------"
+        #print self.buffer
         return self.buffer
         
     def start(self):

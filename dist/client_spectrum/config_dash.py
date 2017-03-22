@@ -25,7 +25,7 @@ import os
 # create logger
 LOG_NAME = 'AStream_log'
 LOG_LEVEL = None
-
+PLAYBACK = ""
 # Set '-' to print to screen
 LOG_FOLDER = "ASTREAM_LOGS/"
 if not os.path.exists(LOG_FOLDER):
@@ -36,8 +36,7 @@ LOG_FILENAME = os.path.join(LOG_FOLDER, 'DASH_RUNTIME_LOG')
 # PLAYBACK_LOG_FILENAME = os.path.join(LOG_FOLDER, strftime('DASH_PLAYBACK_LOG_%Y-%m-%d.%H_%M_%S.csv'))
 # Buffer logs created by dash_buffer.py
 BUFFER_LOG_FILENAME = os.path.join(LOG_FOLDER, strftime('DASH_BUFFER_LOG_%Y-%m-%d.%H_%M_%S.csv'))
-SERVER_LOG_FILENAME = os.path.join(LOG_FOLDER, strftime('SERVER_LOG_%Y-%m-%d.%H_%M_%S.csv'))
-BOLA_BUFFER_LOG_FILENAME = os.path.join(LOG_FOLDER, strftime('BOLA_LOG_%Y-%m-%d.%H_%M_%S.csv'))
+DOWNLOAD_LOG_FILENAME = os.path.join(LOG_FOLDER, strftime('DOWNLOAD_LOG_%Y-%m-%d.%H_%M_%S.csv'))
 LOG_FILE_HANDLE = None
 # To be set by configure_log_file.py
 LOG = None
@@ -52,7 +51,7 @@ JSON_HANDLE['playback_info'] = {'start_time': None,
                                 'down_shifts': 0
                                 }
 # Constants for the BASIC-2 adaptation scheme
-BASIC_THRESHOLD = 10
+BASIC_THRESHOLD = 14
 BASIC_UPPER_THRESHOLD = 1.2
 # Number of segments for moving average
 BASIC_DELTA_COUNT = 5
@@ -82,31 +81,6 @@ NETFLIX_BUFFER_SIZE = 15
 NETFLIX_INITIAL_BUFFER = 2
 NETFLIX_INITIAL_FACTOR = 0.875
 
-#------------------------------------------------
-#BOLA ADAPTATION
-#------------------------------------------------
-MINIMUM_BUFFER_LEVEL_SPACING = 5.0
-AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2
-AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3
-DEFAULT_MIN_BUFFER_TIME = 12
-LONG_FORM_CONTENT_DURATION_THRESHOLD = 600
-BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60
-BUFFER_TIME_AT_TOP_QUALITY = 30
-BANDWIDTH_SAFETY_FACTOR = 0.9
-BOLA_BUFFER_SIZE=15
-#BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
-BOLA_STATE_ONE_BITRATE = 0
-#BOLA_STATE_STARTUP       : Download fragments at most recently measured throughput.
-BOLA_STATE_STARTUP = 1
-#BOLA_STATE_STARTUP_NO_INC: If quality increased then decreased during startup, then quality cannot be increased.
-BOLA_STATE_STARTUP_NO_INC = 2
-#BOLA_STATE_STEADY        : Buffer primed, we switch to steady operation.
-BOLA_STATE_STEADY = 3
-BOLA_DEBUG =0
-BOLAU = True
-
-GRACE_PERIOD_MS = 0.5
-POOR_LATENCY_MS = 0.2
 # For ping.py
 PING_PACKETS = 10
 ping_option_nb_pkts = PING_PACKETS
@@ -116,5 +90,3 @@ index_rtt_min = None
 index_rtt_avg = None
 index_rtt_max = None
 RTT = False
-
-

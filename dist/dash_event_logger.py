@@ -228,7 +228,7 @@ def runInterval():
   intervalBufferLevelThread.start()
   """
 
-def clearInterval(interval):
+def clearInterval(interval=intervalBufferLevelThread):
   interval.cancel()
   return True
 
