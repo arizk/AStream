@@ -47,7 +47,7 @@ import multiprocessing
 import numpy as np
 import dash_event_logger
 PLAYER = None
-
+PLAYBACK_TIME = 200
 
 try:
     WindowsError
@@ -108,8 +108,9 @@ class DashPlayback:
         self.video = dict()
 
 def set_max_duration(time, segmentsize):
-    global SEGMENT_LIMIT
-    SEGMENT_LIMIT = int(np.ceil(time/segmentsize))
+    global PLAYBACK_TIME
+    PLAYBACK_TIME = time
+    dash_buffer.DashPlayer.playback_duration = time
 
 
 def get_mpd(url):
@@ -444,7 +445,7 @@ def print_representations(dp_object):
         print bandwidth
 
 
-def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, retrans=False):
+def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, retrans=False, duration=10):
     """ Module that downloads the MPD-FIle and download
         all the representations of the Module to download
         the MPEG-DASH media.
@@ -464,8 +465,10 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     # Initialize the DASH buffer
     video_segment_duration = 2
     bola_init_state = False
-    dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
+    dash_player = dash_buffer.DashPlayer(duration, video_segment_duration)
     global PLAYER
+    global PLAYBACK_TIME
+    PLAYBACK_TIME = duration
     PLAYER = dash_player
     start_dload_time = timeit.default_timer()
 
@@ -793,6 +796,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         segment_path = dp_list[segment_number][current_bitrate]
         segment_url = urlparse.urljoin(domain, segment_path)
         config_dash.LOG.info("SEGMENTURLBitrate2: %d"%current_bitrate)
+        #original_segment_url = ''
         if retransmission_delay_switch:
             original_segment_path = dp_list[original_segment_number][original_current_bitrate]
             original_segment_url = urlparse.urljoin(domain, original_segment_path)
@@ -802,7 +806,18 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         #print file_identifier
         #print "+++++++++++++"
         config_dash.LOG.info("{}: Segment URL = {}".format(playback_type.upper(), segment_url))
+        print "PLAYBACK_TIME {}: Player Time = {} {}".format(PLAYBACK_TIME, dash_player.playback_timer.time(), dash_player.playback_timer.time() >= PLAYBACK_TIME)
+        #from IPython import embed
+        #embed()
+        if dash_player.playback_timer.time() >= PLAYBACK_TIME:
+            #dash_event_logger.clearInterval()
+            #TODO: Kill DASHEVENTLOGEGR THREAD
+            print "HELLO"
+            #from IPython import embed
+            #embed()
 
+            dash_player.stop()
+            break;
         if delay:
             delay_start = time.time()
             config_dash.LOG.info("SLEEPING for {}seconds ".format(delay*segment_duration))
@@ -963,6 +978,7 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
             elif previous_bitrate > current_bitrate:
                 config_dash.JSON_HANDLE['playback_info']['down_shifts'] += 1
             previous_bitrate = current_bitrate
+
     # waiting for the player to finish playing
     while dash_player.playback_state not in dash_buffer.EXIT_STATES:
         time.sleep(1)

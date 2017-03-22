@@ -20,6 +20,7 @@ class DashPlayer:
         self.player_thread = None
         self.playback_start_time = None
         self.playback_duration = video_length
+        print self.playback_duration
         self.segment_duration = segment_duration
         # Timers to keep track of playback time and the actual time
         self.playback_timer = StopWatch()
@@ -205,9 +206,9 @@ class DashPlayer:
         print "&$^@*#^$@"
         #print segment
         print segment['segment_number']
-        print "^&(%^$&#" 
+        print "^&(%^$&#"
         # MZ: Standard case. New segment arrives and is appended to the queue.
-        if (not self.current_segment) or (self.current_segment < segment['segment_number']): 
+        if (not self.current_segment) or (self.current_segment < segment['segment_number']):
             print "------========"
             print "hello! Standard"
             self.buffer_lock.acquire()
@@ -221,7 +222,7 @@ class DashPlayer:
             self.buffer_length_lock.release()
             self.current_segment = segment['segment_number']
 
-        # MZ: Retransmission case. Segment in better quality is retransmitted and replaces 
+        # MZ: Retransmission case. Segment in better quality is retransmitted and replaces
         # existing segment.
         else:
             print "------========"
@@ -241,7 +242,7 @@ class DashPlayer:
             print self.buffer
             #self.buffer.pop(100)
             #self.buffer.pop(segment.index(segment['segment_number']))
-            #self.buffer.insert(segment, segment['segment_number']) 
+            #self.buffer.insert(segment, segment['segment_number'])
             self.buffer_lock.release()
             self.buffer_length_lock.acquire()
             print "buffer_length_lock acquired"
@@ -264,7 +265,7 @@ class DashPlayer:
         print "-----------buffer:-----------"
         print self.buffer
         return self.buffer
-        
+
     def start(self):
         """ Start playback"""
         self.set_state("INITIAL_BUFFERING")
