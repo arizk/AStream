@@ -6,14 +6,11 @@
 from __future__ import division
 import re
 import config_dash
-from operator import mod
-import re
-from IPython import embed
 
 # Dictionary to convert size to bits
 SIZE_DICT = {'bits':   1,
-             'Kbits':  1024,
-             'Mbits':  1024*1024,
+             'Kbits':  1000,
+             'Mbits':  1000*1000,
              'bytes':  8,
              'KB':  1024*8,
              'MB': 1024*1024*8,
@@ -96,16 +93,14 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
     segment_count = media.start
     # Get the Base URL string
     base_url = media.base_url
-    if "$Bandwidth$" in base_url:
-        base_url = base_url.replace("$Bandwidth$", str(bitrate))
-    if "$Number$" in base_url:
-        base_url = base_url.replace("$Number$", "%d")
-        #base_url = base_url.split('$')
-        #base_url[1] = base_url[1].replace('$', '')
-        #base_url[1] = base_url[1].replace('Number', '')
-        #base_url = ''.join(base_url)
+    #print base_url
     while True:
-        media.url_list.append(base_url % segment_count)
+        if "$Bandwidth$" in base_url:
+            base_url = base_url.replace("$Bandwidth$", str(bitrate))
+        if "$Number$" in base_url:
+            res = base_url.replace('$Number$', str(segment_count))
+        media.url_list.append(res)
+        #print res
         segment_count += 1
         if total_playback > playback_duration:
             break
@@ -113,81 +108,6 @@ def get_url_list(media, segment_duration,  playback_duration, bitrate):
     return media
 
 
-def read_mpd_v2(mpd_file, dashplayback):
-    """ function to read mpds which are defined similar to
-        http://www-itec.uni-klu.ac.at/ftp/datasets/DASHDataset2014/OfForestAndMen/2sec/OfForestAndMen_2s_simple_2014_05_09.mpd"""
-
-    try:
-        tree = ET.parse(mpd_file)
-        print("successful parsed mpd_file")
-    except IOError:
-        print("MPD file not found. Exiting")
-        return None
-
-    config_dash.JSON_HANDLE["video_metadata"] = {'mpd_file': mpd_file}
-    root = tree.getroot()
-
-    currentTag = get_tag_name(root.tag).upper()
-
-    #MPD ATTRIBUTES
-    if 'MPD' in currentTag:
-        if MEDIA_PRESENTATION_DURATION in root.attrib:
-            dashplayback.playback_duration = get_playback_time(root.attrib[MEDIA_PRESENTATION_DURATION])
-            config_dash.JSON_HANDLE["video_metadata"]['playback_duration'] = dashplayback.playback_duration
-        if MIN_BUFFER_TIME in root.attrib:
-            dashplayback.min_buffer_time = get_playback_time(root.attrib[MIN_BUFFER_TIME])
-
-    child_period = None
-    for child_element in root:
-        child = get_tag_name(child_element.tag).upper()
-        if child == "PERIOD":
-            child_period = child_element
-
-    if child_period is None:
-        print("ERROR NO PERIOD")
-
-    for adaption_set in child_period:
-        for child in adaption_set:
-
-            tag = get_tag_name(child.tag).upper()
-            if tag == 'SEGMENTTEMPLATE':
-                timescale = child.attrib['timescale']
-                media = child.attrib['media']
-                startNumber = child.attrib['startNumber']
-                duration = child.attrib['duration']
-                initialization = child.attrib['initialization']
-            #skip audio and subtitles
-            elif tag == 'REPRESENTATION' and child.attrib['id'] not in 'subtitles' and child.attrib['mimeType'] == 'video/mp4':
-                #embed()
-                _id = child.attrib['id']
-                mimeType = child.attrib['mimeType']
-                codecs = child.attrib['codecs']
-                width = child.attrib['width']
-                height = child.attrib['height']
-                bandwidth = child.attrib['bandwidth']
-
-                if 'audio' in mimeType:
-                    media_object = dashplayback.audio
-                if 'video' in mimeType:
-                    media_object = dashplayback.video
-
-                bandwidth = int(bandwidth)
-                config_dash.JSON_HANDLE["video_metadata"]['available_bitrates'] = list()
-                config_dash.JSON_HANDLE["video_metadata"]['available_bitrates'].append(bandwidth)
-                media_object[bandwidth] = MediaObject()
-                media_object[bandwidth].segment_sizes = []
-
-                #SegmentTemplate Attributes
-                #I Assume that the segment template was the first to be filled
-                media_object[bandwidth].base_url = media
-                media_object[bandwidth].start = int(startNumber)
-                media_object[bandwidth].timescale = float(timescale)
-                media_object[bandwidth].initialization = initialization
-                video_segment_duration = (float(duration)/float(timescale))
-
-    print("DONE WITH MY NEW READ_MPD")
-
-    return dashplayback, int(video_segment_duration)
 def read_mpd(mpd_file, dashplayback):
     """ Module to read the MPD file"""
     config_dash.LOG.info("Reading the MPD file")
@@ -207,7 +127,6 @@ def read_mpd(mpd_file, dashplayback):
     child_period = root[0]
     video_segment_duration = None
     for adaptation_set in child_period:
-        print("TESTTEST")
         if 'mimeType' in adaptation_set.attrib:
             media_found = False
             if 'audio' in adaptation_set.attrib['mimeType']:
@@ -222,7 +141,6 @@ def read_mpd(mpd_file, dashplayback):
                 config_dash.LOG.info("Retrieving Media")
                 config_dash.JSON_HANDLE["video_metadata"]['available_bitrates'] = list()
                 for representation in adaptation_set:
-                    print(get_tag_name(segment_info.tag))
                     bandwidth = int(representation.attrib['bandwidth'])
                     config_dash.JSON_HANDLE["video_metadata"]['available_bitrates'].append(bandwidth)
                     media_object[bandwidth] = MediaObject()
@@ -236,8 +154,14 @@ def read_mpd(mpd_file, dashplayback):
                         if 'video' in adaptation_set.attrib['mimeType']:
                             if "SegmentSize" in get_tag_name(segment_info.tag):
                                 try:
+                                    #print "-----------------"
+                                    #print float(segment_info.attrib['size'])
+                                    #print "+++++++++++++++++"
                                     segment_size = float(segment_info.attrib['size']) * float(
                                         SIZE_DICT[segment_info.attrib['scale']])
+                                    #print "++++-----------------"
+                                    #print segment_size
+                                    #print "+++-----------------"
                                 except KeyError, e:
                                     config_dash.LOG.error("Error in reading Segment sizes :{}".format(e))
                                     continue
@@ -246,9 +170,8 @@ def read_mpd(mpd_file, dashplayback):
                                 video_segment_duration = (float(segment_info.attrib['duration'])/float(
                                     segment_info.attrib['timescale']))
                                 config_dash.LOG.debug("Segment Playback Duration = {}".format(video_segment_duration))
-        else:
-            print(adaptation_set)
-            #if there is no mimetype in the adaption set but maybe in the representation
-            for tag in adaptation_set:
-                print(tag)
+    #print "-----------"
+    #print media_object[bandwidth].segment_sizes
+    #print "-----------"
+    #video_segment_duration = 10
     return dashplayback, int(video_segment_duration)

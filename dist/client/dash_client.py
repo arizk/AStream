@@ -60,7 +60,7 @@ DOWNLOAD = False
 SEGMENT_LIMIT = None
 
 PLAYER = None
-
+PLAYBACK_TIME = 200
 
 class DashPlayback:
     """
@@ -206,7 +206,7 @@ def print_representations(dp_object):
         print bandwidth
 
 
-def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None):
+def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, duration=120):
     global PLAYER
     """ Module that downloads the MPD-FIle and download
         all the representations of the Module to download
@@ -229,6 +229,8 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     # Initialize the DASH buffer
     dash_player = dash_buffer.DashPlayer(dp_object.playback_duration, video_segment_duration)
     PLAYER = dash_player
+    global PLAYBACK_TIME
+    PLAYBACK_TIME = duration
 
 
     dash_event_logger.init(0, PLAYER, 'unknown', MPD , 'AStream', 'standard',)
@@ -398,7 +400,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
             elif previous_bitrate > current_bitrate:
                 config_dash.JSON_HANDLE['playback_info']['down_shifts'] += 1
             previous_bitrate = current_bitrate
-
+        if dash_player.playback_timer.time() >= PLAYBACK_TIME:
+            dash_player.stop()
+            break;
     # waiting for the player to finish playing
     while dash_player.playback_state not in dash_buffer.EXIT_STATES:
         time.sleep(1)

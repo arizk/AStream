@@ -445,7 +445,7 @@ def print_representations(dp_object):
         print bandwidth
 
 
-def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, retrans=False, duration=10):
+def start_playback_smart(dp_object, domain, playback_type=None, download=False, video_segment_duration=None, retrans=False, duration=10, buffersize=15):
     """ Module that downloads the MPD-FIle and download
         all the representations of the Module to download
         the MPEG-DASH media.
@@ -472,6 +472,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
     PLAYER = dash_player
     start_dload_time = timeit.default_timer()
 
+    print "Setting buffersize to {}".format(buffersize)
+    config_dash.MAX_BUFFER_SIZE = buffersize
+    config_dash.BOLA_BUFFER_SIZE = buffersize
     dash_event_logger.init(0, PLAYER, 'unknown', MPD , 'AStream', 'bola',)
     dash_event_logger.setBufferLevelProvider()
 
