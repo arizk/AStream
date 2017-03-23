@@ -4,7 +4,6 @@ import json
 from datetime import datetime
 import threading
 import math
-import IPython
 
 API_URL = 'http://127.0.0.1:5000/api/'
 sessionId = 0
