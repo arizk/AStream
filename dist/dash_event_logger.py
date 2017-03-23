@@ -3,6 +3,8 @@ import urllib2
 import json
 from datetime import datetime
 import threading
+import math
+import IPython
 
 API_URL = 'http://127.0.0.1:5000/api/'
 sessionId = 0
@@ -37,6 +39,7 @@ class CurrentState():
   bitrate = 0
   width = 0
   height = 0
+  last_representation = None
 
 class Endpoints():
   STALLING = 'stalling'
@@ -138,7 +141,21 @@ def onAdaptation(event):
 
   current_playback_time = event['playback_position']
   time_in_representation = current_playback_time - CurrentState.last_representation_change
+
+
+  if CurrentState.last_bitrate == event['bitrate']:
+      results.get('adaptation')[-1]['time_in_representation'] = time_in_representation
+      return
+
+  print "Playback time {}".format(event['playback_position'])
   CurrentState.last_representation_change = current_playback_time
+
+  amplitude = 0
+
+  if CurrentState.last_representation != None:
+      amplitude = math.fabs(CurrentState.last_representation - event.get('segment_layer', 0))
+      CurrentState.last_representation =  event.get('segment_layer', 0)
+
 
   data = {
     'timestamp': getUTCTimestamp(),
@@ -150,7 +167,9 @@ def onAdaptation(event):
     'width': event['width'],
     'bitrate':event['bitrate'],
     'playback_position': event['playback_position'],
-    'time_in_representation': time_in_representation
+    'time_in_representation': time_in_representation,
+    'amplitude': amplitude,
+    'representation' : event.get('segment_layer', 0),
     }
 
   CurrentState.last_width =  CurrentState.width
@@ -159,6 +178,7 @@ def onAdaptation(event):
   CurrentState.width = event['width']
   CurrentState.height = event['height']
   CurrentState.bitrate = event['bitrate']
+  CurrentState.last_representation = event.get('segment_layer', 0)
 
   sendRequest(Endpoints.ADAPTATION, data)
 

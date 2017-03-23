@@ -813,11 +813,15 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         #from IPython import embed
         #embed()
         if dash_player.playback_timer.time() >= PLAYBACK_TIME:
-            #dash_event_logger.clearInterval()
-            #TODO: Kill DASHEVENTLOGEGR THREAD
-            print "HELLO"
-            #from IPython import embed
-            #embed()
+            event = {
+                    'height': 0,
+                    'width': 0,
+                    'bitrate': current_bitrate,
+                    'playback_position': timeit.default_timer()-start_dload_time,
+                    'segment_number': segment_number,
+                    'segment_layer': bitrates.index(current_bitrate)
+                }
+            dash_event_logger.onAdaptation(event)
 
             dash_player.stop()
             break;
@@ -973,7 +977,9 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
                     'height': 0,
                     'width': 0,
                     'bitrate': current_bitrate,
-                    'playback_position': dash_player.playback_timer.time(),
+                    'playback_position': timeit.default_timer()-start_dload_time,
+                    'segment_number': segment_number,
+                    'segment_layer': bitrates.index(current_bitrate),
                 }
             dash_event_logger.onAdaptation(event)
             if previous_bitrate < current_bitrate:
