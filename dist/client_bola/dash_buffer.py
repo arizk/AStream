@@ -139,6 +139,15 @@ class DashPlayer:
                     config_dash.LOG.info("Initial Waiting Time = {}".format(initial_wait))
                     self.set_state("PLAY")
                     self.log_entry("InitialBuffering-Play")
+                    res_event = {
+                    'timestamp':0,
+                    'eventtype': 'stalling',
+                    'playback_position': 0,
+                    'experiment': 0,
+                    'eventtype': 'initialStalling',
+                    'duration': initial_wait,
+                    }
+                    dash_event_logger.onInitStalling(res_event)
 
             if self.playback_state == "PLAY":
                     # Check of the buffer has any segments
