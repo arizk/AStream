@@ -111,6 +111,7 @@ def onStalling(duration):
   sendRequest(Endpoints.STALLING, data)
 
 def onInitStalling(data):
+  #data.timestamp = datetime.now()
   sendRequest(Endpoints.STALLING, data)
 
 def reportBandwidthSample(playbackPosition, delayMs, bytes_):

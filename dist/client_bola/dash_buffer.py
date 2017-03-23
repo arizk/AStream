@@ -140,7 +140,7 @@ class DashPlayer:
                     self.set_state("PLAY")
                     self.log_entry("InitialBuffering-Play")
                     res_event = {
-                    'timestamp':0,
+                    'timestamp': "Thu, 23 Mar 2017 14:21:02", #FIXME getUTCTimestamp stops player
                     'eventtype': 'stalling',
                     'playback_position': 0,
                     'experiment': 0,
