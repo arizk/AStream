@@ -145,6 +145,8 @@ def onAdaptation(event):
   current_playback_time = event['playback_position']
   time_in_representation = current_playback_time - CurrentState.last_representation_change
 
+  if len(results.get('adaptation')) == 1:
+      results.get('adaptation')[0]['init_representation'] = results.get('adaptation')[0]['bitrate']
 
   if CurrentState.last_bitrate == event['bitrate']:
       results.get('adaptation')[-1]['time_in_representation'] = time_in_representation
