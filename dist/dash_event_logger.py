@@ -99,11 +99,11 @@ def onBufferLevelUpdate(event):
     'experiment': sessionId
     }
 
-def onStalling(duration):
+def onStalling(duration, streamPos):
   data = {
     'timestamp': getUTCTimestamp(),
     'eventtype': 'stalling',
-    'playback_position': CurrentState.streamPos,
+    'playback_position': streamPos,
     'experiment': sessionId,
     'duration': duration * 1000
     }
@@ -127,7 +127,7 @@ def reportBandwidthSample(playbackPosition, delayMs, bytes_):
   sendRequest(Endpoints.BW_SAMPLE, data)
 
 def bufferingStart(time, streamPos):
-  CurrentState.videoState = videoState.rebuffering
+  #CurrentState.videoState = videoState.rebuffering
   CurrentState.bufferStart = time
   CurrentState.streamPos = streamPos
 
@@ -138,7 +138,7 @@ def bufferingEnd(stallingTime):
 
   onStalling(stallingDuration)
 
-  CurrentState.videoState = VideoState.playing
+  #CurrentState.videoState = VideoState.playing
 
 def onAdaptation(event):
 
