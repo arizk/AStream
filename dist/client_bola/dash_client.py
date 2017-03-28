@@ -463,7 +463,8 @@ def start_playback_smart(dp_object, domain, playback_type=None, download=False, 
         :return:
     """
     # Initialize the DASH buffer
-    video_segment_duration = 2
+    #video_segment_duration = duration
+    print "-------------------- SEGMENT DURATION {}".format(video_segment_duration)
     bola_init_state = False
     dash_player = dash_buffer.DashPlayer(duration, video_segment_duration)
     global PLAYER
