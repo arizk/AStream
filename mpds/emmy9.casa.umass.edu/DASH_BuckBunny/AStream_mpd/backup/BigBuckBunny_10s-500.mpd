@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MPD file Generated with GPAC version 0.5.1-DEV-rev5379  on 2014-09-10T13:30:18Z-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" minBufferTime="PT1.500000S" type="static" mediaPresentationDuration="PT0H9M56.46S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period duration="PT0H9M56.46S">
+    <AdaptationSet mimeType="video/mp4" segmentAlignment="true" group="1" maxWidth="480" maxHeight="360" maxFrameRate="24" par="4:3">
+	  <Representation id="854x480 509.0kbps" mimeType="video/mp4" codecs="avc1.42c01e" width="854" height="480" frameRate="24" sar="1:1" startWithSAP="1" bandwidth="503270" >
+	  	<SegmentTemplate timescale="96" media="DASH_BigBuckBunny/bunny_multi_length/10sec/bunny_$Bandwidth$bps/BigBuckBunny_10s$Number$%d.m4s" startNumber="1" duration="384" initialization="DASH_BigBuckBunny/bunny_multi_length/10sec/bunny_$Bandwidth$bps/BigBuckBunny_10s_init.mp4" />
+		<SegmentSize id="BigBuckBunny_10s1.m4s" size="1888.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s2.m4s" size="2200.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s3.m4s" size="2344.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s4.m4s" size="2216.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s5.m4s" size="1712.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s6.m4s" size="1424.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s7.m4s" size="2224.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s8.m4s" size="2256.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s9.m4s" size="2080.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s10.m4s" size="2272.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s11.m4s" size="2264.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s12.m4s" size="2312.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s13.m4s" size="2264.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s14.m4s" size="2280.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s15.m4s" size="1304.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s16.m4s" size="1648.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s17.m4s" size="1920.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s18.m4s" size="1744.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s19.m4s" size="1880.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s20.m4s" size="2240.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s21.m4s" size="2208.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s22.m4s" size="1552.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s23.m4s" size="1600.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s24.m4s" size="1352.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s25.m4s" size="1472.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s26.m4s" size="1824.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s27.m4s" size="1992.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s28.m4s" size="1720.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s29.m4s" size="2160.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s30.m4s" size="2144.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s31.m4s" size="2160.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s32.m4s" size="2016.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s33.m4s" size="2192.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s34.m4s" size="2248.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s35.m4s" size="2224.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s36.m4s" size="2280.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s37.m4s" size="1952.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s38.m4s" size="1840.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s39.m4s" size="2112.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s40.m4s" size="1608.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s41.m4s" size="2008.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s42.m4s" size="1832.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s43.m4s" size="1728.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s44.m4s" size="1600.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s45.m4s" size="2176.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s46.m4s" size="2200.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s47.m4s" size="2240.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s48.m4s" size="1440.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s49.m4s" size="2152.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s50.m4s" size="1584.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s51.m4s" size="1960.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s52.m4s" size="1856.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s53.m4s" size="2168.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s54.m4s" size="2208.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s55.m4s" size="2208.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s56.m4s" size="1416.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s57.m4s" size="1768.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s58.m4s" size="1848.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s59.m4s" size="1976.0" scale="Kbits"/>
+	    <SegmentSize id="BigBuckBunny_10s60.m4s" size="2024.0" scale="Kbits"/>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
